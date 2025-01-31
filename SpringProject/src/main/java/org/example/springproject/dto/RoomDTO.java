@@ -1,7 +1,6 @@
 package org.example.springproject.dto;
 
 import org.example.springproject.entity.Sensor;
-import org.example.springproject.entity.User;
 
 import java.util.List;
 

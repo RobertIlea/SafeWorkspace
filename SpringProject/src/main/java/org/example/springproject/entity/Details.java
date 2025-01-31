@@ -3,6 +3,7 @@ package org.example.springproject.entity;
 public class Details {
     private String sensorName;
     private float value;
+    private float humidity;
     private Integer port;
 
     public Details(){}
@@ -34,5 +35,13 @@ public class Details {
 
     public void setPort(Integer port) {
         this.port = port;
+    }
+
+    public float getHumidity() {
+        return humidity;
+    }
+
+    public void setHumidity(float humidity) {
+        this.humidity = humidity;
     }
 }
