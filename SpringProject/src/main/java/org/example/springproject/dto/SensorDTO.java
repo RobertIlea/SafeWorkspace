@@ -3,16 +3,21 @@ package org.example.springproject.dto;
 import org.example.springproject.entity.Details;
 import org.example.springproject.util.SensorType;
 
+import java.util.List;
+import java.util.Map;
+
 public class SensorDTO {
     private String id;
-    private SensorType sensorType;
-    private Details details;
+    private String sensorType;
+    private Integer port;
+    private List<Details> details;
 
     public SensorDTO(){}
 
-    public SensorDTO(String id, SensorType sensorType, Details details) {
+    public SensorDTO(String id, String sensorType,Integer port, List<Details> details) {
         this.id = id;
         this.sensorType = sensorType;
+        this.port = port;
         this.details = details;
     }
 
@@ -24,19 +29,27 @@ public class SensorDTO {
         this.id = id;
     }
 
-    public SensorType getSensorType() {
+    public Integer getPort() {
+        return port;
+    }
+
+    public void setPort(Integer port) {
+        this.port = port;
+    }
+
+    public String getSensorType() {
         return sensorType;
     }
 
-    public void setSensorType(SensorType sensorType) {
+    public void setSensorType(String sensorType) {
         this.sensorType = sensorType;
     }
 
-    public Details getDetails() {
+    public List<Details> getDetails() {
         return details;
     }
 
-    public void setDetails(Details details) {
+    public void setDetails(List<Details> details) {
         this.details = details;
     }
 }

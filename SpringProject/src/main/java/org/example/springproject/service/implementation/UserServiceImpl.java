@@ -144,7 +144,23 @@ public class UserServiceImpl implements UserService {
         } catch (Exception e) {
             throw new RuntimeException("Error while fetching the users: " + e.getMessage(), e);
         }
-
     }
+    @Override
+    public UserDTO getUserById(String id){
+        try{
+            DocumentReference documentReference = firestore.collection(USER_COLLECTION).document(id);
+            ApiFuture<DocumentSnapshot> future = documentReference.get();
+            DocumentSnapshot document = future.get();
 
+            User user = null;
+            if(!document.exists()){
+                throw new RuntimeException("User with id: " + id + " doesn't exist in database!");
+            }
+            user = document.toObject(User.class);
+            return new UserDTO(id,user.getName(),user.getEmail(),user.getPassword());
+
+        } catch (ExecutionException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

@@ -16,4 +16,6 @@ public interface RoomService {
     List<RoomDTO> getRooms();
 
     List<RoomDTO> getRoomsByUserId(String id);
+
+    RoomDTO addSensorToRoom(String id, String sensorId);
 }

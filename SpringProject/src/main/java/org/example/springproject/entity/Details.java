@@ -1,47 +1,39 @@
 package org.example.springproject.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+import com.google.cloud.Timestamp;
+import java.util.Map;
+
 public class Details {
-    private String sensorName;
-    private float value;
-    private float humidity;
-    private Integer port;
+    private Timestamp timestamp;
+    private Map<String,Float> data;
 
     public Details(){}
-    public Details(String sensorName, float value, Integer port){
-        this.sensorName = sensorName;
-        this.value = value;
-        this.port = port;
+
+    public Details(long unixTimestamp, Map<String, Float> data) {
+        this.timestamp = Timestamp.ofTimeSecondsAndNanos(unixTimestamp, 0);// Convert UNIX time
+        this.data = data;
     }
 
-    public String getSensorName() {
-        return sensorName;
+    public Details(Timestamp timestampObj, Map<String, Float> data) {
+        this.timestamp = timestampObj;
+        this.data = data;
     }
 
-    public void setSensorName(String sensorName) {
-        this.sensorName = sensorName;
+    public Timestamp getTimestamp() {
+        return timestamp;
     }
 
-    public float getValue() {
-        return value;
+    public void setTimestamp(Timestamp timestamp) {
+        this.timestamp = timestamp;
     }
 
-    public void setValue(float value) {
-        this.value = value;
+    public Map<String, Float> getData() {
+        return data;
     }
 
-    public Integer getPort() {
-        return port;
-    }
-
-    public void setPort(Integer port) {
-        this.port = port;
-    }
-
-    public float getHumidity() {
-        return humidity;
-    }
-
-    public void setHumidity(float humidity) {
-        this.humidity = humidity;
+    public void setData(Map<String, Float> data) {
+        this.data = data;
     }
 }

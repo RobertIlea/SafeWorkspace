@@ -16,4 +16,9 @@ public interface SensorService {
     List<SensorDTO> getSensors();
 
     String saveSensorData(SensorDTO sensorDTO) throws ExecutionException, InterruptedException;
+
+    List<String> getSensorsType();
+
+    SensorDTO getSensorById(String sensorId);
+
 }
