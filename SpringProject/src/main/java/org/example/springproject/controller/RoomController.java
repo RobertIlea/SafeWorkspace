@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -27,12 +28,12 @@ public class RoomController {
             return ResponseEntity.ok(rooms);
         }catch (RuntimeException e) {
             List<RoomDTO> errorList = new ArrayList<>();
-            RoomDTO errorDTO = new RoomDTO("Error: " + e.getMessage(), new ArrayList<>());
+            RoomDTO errorDTO = new RoomDTO("Error: " + e.getMessage(), new ArrayList<>(), "");
             errorList.add(errorDTO);
             return ResponseEntity.badRequest().body(errorList);
         } catch (Exception e) {
             List<RoomDTO> errorList = new ArrayList<>();
-            RoomDTO errorDTO = new RoomDTO("Error: " + e.getMessage(), new ArrayList<>());
+            RoomDTO errorDTO = new RoomDTO("Error: " + e.getMessage(), new ArrayList<>(), "");
             errorList.add(errorDTO);
             return new ResponseEntity<>(errorList, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -44,12 +45,12 @@ public class RoomController {
             return ResponseEntity.ok(rooms);
         }catch (RuntimeException e) {
             List<RoomDTO> errorList = new ArrayList<>();
-            RoomDTO errorDTO = new RoomDTO("Error: " + e.getMessage(), new ArrayList<>());
+            RoomDTO errorDTO = new RoomDTO("Error: " + e.getMessage(), new ArrayList<>(), "");
             errorList.add(errorDTO);
             return ResponseEntity.badRequest().body(errorList);
         } catch (Exception e) {
             List<RoomDTO> errorList = new ArrayList<>();
-            RoomDTO errorDTO = new RoomDTO("Error: " + e.getMessage(), new ArrayList<>());
+            RoomDTO errorDTO = new RoomDTO("Error: " + e.getMessage(), new ArrayList<>(),"");
             errorList.add(errorDTO);
             return new ResponseEntity<>(errorList, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -60,10 +61,10 @@ public class RoomController {
             RoomDTO roomDTO = roomService.addRoom(room);
             return ResponseEntity.ok(roomDTO);
         }catch (RuntimeException e) {
-            RoomDTO errorDTO = new RoomDTO("Error: " + e.getMessage(), new ArrayList<>());
+            RoomDTO errorDTO = new RoomDTO("Error: " + e.getMessage(), new ArrayList<>(),"");
             return ResponseEntity.badRequest().body(errorDTO);
         } catch (Exception e) {
-            RoomDTO errorDTO = new RoomDTO("Error: " + e.getMessage(), new ArrayList<>());
+            RoomDTO errorDTO = new RoomDTO("Error: " + e.getMessage(), new ArrayList<>(),"");
             return new ResponseEntity<>(errorDTO, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -76,11 +77,11 @@ public class RoomController {
             return ResponseEntity.ok(roomDTO);
         }catch (RuntimeException e) {
             List<Sensor> sensorList = new ArrayList<>();
-            RoomDTO errorDTO = new RoomDTO("Error: " + e.getMessage(), sensorList);
+            RoomDTO errorDTO = new RoomDTO("Error: " + e.getMessage(), sensorList,"");
             return ResponseEntity.badRequest().body(errorDTO);
         } catch (Exception e){
             List<Sensor> sensorList = new ArrayList<>();
-            RoomDTO errorDTO = new RoomDTO("Error: " + e.getMessage(), sensorList);
+            RoomDTO errorDTO = new RoomDTO("Error: " + e.getMessage(), sensorList,"");
             return new ResponseEntity<>(errorDTO, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -91,11 +92,30 @@ public class RoomController {
             return ResponseEntity.ok(roomDTO);
         }catch (RuntimeException e) {
             List<Sensor> sensorList = new ArrayList<>();
-            RoomDTO errorDTO = new RoomDTO("Error: " + e.getMessage(), sensorList);
+            RoomDTO errorDTO = new RoomDTO("Error: " + e.getMessage(), sensorList,"");
             return ResponseEntity.badRequest().body(errorDTO);
         } catch (Exception e){
             List<Sensor> sensorList = new ArrayList<>();
-            RoomDTO errorDTO = new RoomDTO("Error: " + e.getMessage(), sensorList);
+            RoomDTO errorDTO = new RoomDTO("Error: " + e.getMessage(), sensorList,"");
+            return new ResponseEntity<>(errorDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    @PostMapping("/test/{id}")
+    public ResponseEntity<RoomDTO> addSensorToRoom(@PathVariable String id, @RequestBody Map<String, String> requestBody){
+        try{
+            String sensorId = requestBody.get("sensorId");
+            if (sensorId == null) {
+                throw new RuntimeException("Invalid request: sensorId is missing");
+            }
+            RoomDTO roomDTO = roomService.addSensorToRoom(id,sensorId);
+            return ResponseEntity.ok(roomDTO);
+        }catch (RuntimeException e) {
+            List<Sensor> sensorList = new ArrayList<>();
+            RoomDTO errorDTO = new RoomDTO("Error: " + e.getMessage(), sensorList,"");
+            return ResponseEntity.badRequest().body(errorDTO);
+        } catch (Exception e){
+            List<Sensor> sensorList = new ArrayList<>();
+            RoomDTO errorDTO = new RoomDTO("Error: " + e.getMessage(), sensorList,"");
             return new ResponseEntity<>(errorDTO, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

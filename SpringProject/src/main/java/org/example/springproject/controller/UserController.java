@@ -37,6 +37,19 @@ public class UserController {
             return new ResponseEntity<>(errorList, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    @GetMapping("/{id}")
+    public ResponseEntity<UserDTO> getUserById(@PathVariable String id){
+        try{
+            UserDTO userDTO = userService.getUserById(id);
+            return ResponseEntity.ok(userDTO);
+        }catch (RuntimeException e){
+            UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "", "");
+            return ResponseEntity.badRequest().body(errorDTO);
+        }catch (Exception e){
+            UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "", "");
+            return new ResponseEntity<>(errorDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
     @PostMapping("/")
     public ResponseEntity<UserDTO> addUser(@RequestBody User user) {
         try{
@@ -77,4 +90,5 @@ public class UserController {
             return new ResponseEntity<>(errorDTO, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
 }
