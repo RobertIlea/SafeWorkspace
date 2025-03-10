@@ -10,8 +10,10 @@ import org.example.springproject.util.SensorType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 @Service
 public class SensorServiceImpl implements SensorService {
@@ -25,9 +27,8 @@ public class SensorServiceImpl implements SensorService {
     public SensorDTO addSensor(Sensor sensor){
         try{
             DocumentReference sensorRef = firestore.collection(SENSOR_COLLECTION).document();
-            Map<String, Object> sensorData = getStringObjectMap(sensor);
-            sensorRef.set(sensorData).get();
-            return new SensorDTO(sensorRef.getId(), sensor.getSensorType(),sensor.getDetails());
+            sensorRef.set(sensor).get();
+            return new SensorDTO(sensorRef.getId(), sensor.getSensorType(), sensor.getPort(), sensor.getDetails());
         }catch (ExecutionException | InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Error during Firestore operation: " + e.getMessage(), e);
@@ -36,40 +37,39 @@ public class SensorServiceImpl implements SensorService {
         }
     }
 
-    private static Map<String, Object> getStringObjectMap(Sensor sensor) {
-        Map<String,Object> sensorData = new HashMap<>();
-        sensorData.put("sensorType", sensor.getSensorType().name());
-        sensorData.put("port", sensor.getDetails().getPort());
-
-        if(sensor.getSensorType() == SensorType.DHT22){
-            sensorData.put("temperature", sensor.getDetails().getValue());
-            sensorData.put("humidity", sensor.getDetails().getHumidity());
-        }else{
-            sensorData.put("value", sensor.getDetails().getValue());
-        }
-        return sensorData;
-    }
-
     @Override
-    public SensorDTO deleteSensorById(String id){
-        try{
+    public SensorDTO deleteSensorById(String id) {
+        try {
             DocumentReference sensorRef = firestore.collection(SENSOR_COLLECTION).document(id);
             DocumentSnapshot sensorSnapshot = sensorRef.get().get();
 
-            if(!sensorSnapshot.exists()){
-                throw new RuntimeException("Sensor with id: " + id + "doesn't exist!");
+            if (!sensorSnapshot.exists()) {
+                throw new RuntimeException("Sensor with id: " + id + " doesn't exist!");
             }
-            Sensor sensor = sensorSnapshot.toObject(Sensor.class);
+
+            Sensor sensor = deserializeSensor(sensorSnapshot);
             sensorRef.delete().get();
-            assert sensor != null;
-            return new SensorDTO(id,sensor.getSensorType(),sensor.getDetails());
-        }catch (ExecutionException | InterruptedException e) {
+            return new SensorDTO(id, sensor.getSensorType(), sensor.getPort(), sensor.getDetails());
+        } catch (ExecutionException | InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Error during Firestore operation: " + e.getMessage(), e);
         } catch (Exception e) {
             throw new RuntimeException("Error while deleting the sensor: " + e.getMessage(), e);
         }
     }
+
+    public Sensor deserializeSensor(DocumentSnapshot sensorSnapshot) throws InterruptedException, ExecutionException {
+        String sensorType = sensorSnapshot.getString("sensorType");
+        Long portLong = sensorSnapshot.getLong("port");
+        Integer port = (portLong != null) ? portLong.intValue() : 0;
+
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> detailsList = (List<Map<String, Object>>) sensorSnapshot.get("details");
+        List<Details> details = new ArrayList<>();
+        checkDetailsList(detailsList,details);
+        return new Sensor(sensorType, port, details);
+    }
+
 
     @Override
     public SensorDTO updateSensor(String id, Sensor updatedSensor){
@@ -81,9 +81,8 @@ public class SensorServiceImpl implements SensorService {
                 throw new RuntimeException("Sensor with id: " + id + "doesn't exist!");
             }
 
-            Map<String, Object> currentSensor = getStringObjectMap(updatedSensor);
-            sensorRef.set(currentSensor).get();
-            return new SensorDTO(id,updatedSensor.getSensorType(),updatedSensor.getDetails());
+            sensorRef.set(updatedSensor).get();
+            return new SensorDTO(id,updatedSensor.getSensorType(),updatedSensor.getPort(),updatedSensor.getDetails());
         }catch (ExecutionException | InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Error during Firestore operation: " + e.getMessage(), e);
@@ -100,20 +99,8 @@ public class SensorServiceImpl implements SensorService {
             List<SensorDTO> sensors = new ArrayList<>();
             for(QueryDocumentSnapshot document:documents){
                 String id = document.getId();
-                SensorType sensorType = SensorType.valueOf(document.getString("sensorType"));
-                Integer port = Objects.requireNonNull(document.getLong("port")).intValue();
-                Details details;
-
-                if(sensorType == SensorType.DHT22){
-                    float temperature = Objects.requireNonNull(document.getDouble("temperature")).floatValue();
-                    float humidity = Objects.requireNonNull(document.getDouble("humidity")).floatValue();
-                    details = new Details("DHT22", temperature, port);
-                    details.setHumidity(humidity);
-                }else {
-                    float value = Objects.requireNonNull(document.getDouble("value")).floatValue();
-                    details = new Details(sensorType.name(), value, port);
-                }
-                sensors.add(new SensorDTO(id, sensorType, details));
+                Sensor sensor = deserializeSensor(document);
+                sensors.add(new SensorDTO(id, sensor.getSensorType(), sensor.getPort(), sensor.getDetails()));
             }
             return sensors;
         }catch (ExecutionException | InterruptedException e) {
@@ -125,9 +112,82 @@ public class SensorServiceImpl implements SensorService {
     }
 
     @Override
-    public String saveSensorData(SensorDTO sensorDTO) throws ExecutionException, InterruptedException {
-        DocumentReference docRef = firestore.collection(SENSOR_COLLECTION).document(sensorDTO.getId());
-        WriteResult result = docRef.set(sensorDTO).get();
+    public String saveSensorData(SensorDTO newSensorData) throws ExecutionException, InterruptedException {
+        DocumentReference docRef = firestore.collection(SENSOR_COLLECTION).document(newSensorData.getId());
+
+        ApiFuture<DocumentSnapshot> future = docRef.get();
+        DocumentSnapshot documentSnapshot= future.get();
+
+        List<Details> detailsList = new ArrayList<>();
+
+        if(documentSnapshot.exists()){
+            SensorDTO existingSensor = documentSnapshot.toObject(SensorDTO.class);
+            if (existingSensor != null && existingSensor.getDetails() != null) {
+                detailsList = existingSensor.getDetails();
+            }
+        }
+
+        detailsList.add(newSensorData.getDetails().get(0));
+        SensorDTO updatedSensor = new SensorDTO(
+                newSensorData.getId(),
+                newSensorData.getSensorType(),
+                newSensorData.getPort(),
+                detailsList
+        );
+
+        WriteResult result = docRef.set(updatedSensor).get();
         return result.getUpdateTime().toString();
     }
+
+    @Override
+    public List<String> getSensorsType(){
+        return Arrays.stream(SensorType.values()).map(Enum::name).collect(Collectors.toList());
+    }
+
+    @Override
+    public SensorDTO getSensorById(String sensorId) {
+        try {
+            DocumentReference sensorRef = firestore.collection(SENSOR_COLLECTION).document(sensorId);
+            ApiFuture<DocumentSnapshot> future = sensorRef.get();
+            DocumentSnapshot document = future.get();
+
+            if (!document.exists()) {
+                throw new RuntimeException("Sensor with id: " + sensorId + "doesn't exist!");
+            }
+
+            Sensor sensor = deserializeSensor(document);
+            return new SensorDTO(sensorId, Objects.requireNonNull(sensor).getSensorType(), sensor.getPort(), sensor.getDetails());
+        } catch (ExecutionException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void checkDetailsList(List<Map<String, Object>> detailsList, List<Details> details) {
+        if (detailsList != null) {
+            try {
+                for (Map<String, Object> detailMap : detailsList) {
+                    com.google.cloud.Timestamp timestampObj = (com.google.cloud.Timestamp) detailMap.get("timestamp");
+                    Map<String, Float> data = deserializeDetailsList(detailMap);
+                    details.add(new Details(timestampObj, data));
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                throw new RuntimeException("Error processing details: " + ex.getMessage(), ex);
+            }
+        }
+    }
+
+    private static Map<String, Float> deserializeDetailsList(Map<String, Object> detailMap) {
+        Map<String, Float> data = new HashMap<>();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> dataMap = (Map<String, Object>) detailMap.get("data");
+
+        if (dataMap != null) {
+            for (Map.Entry<String, Object> entry : dataMap.entrySet()) {
+                data.put(entry.getKey(), ((Number) entry.getValue()).floatValue());
+            }
+        }
+        return data;
+    }
+
 }

@@ -13,4 +13,6 @@ public interface UserService {
     UserDTO updateUser(String id, User updatedUser);
 
     List<UserDTO> getUsers();
+
+    UserDTO getUserById(String id);
 }

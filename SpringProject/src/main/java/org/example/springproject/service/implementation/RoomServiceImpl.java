@@ -6,12 +6,15 @@ import org.example.springproject.dto.RoomDTO;
 import org.example.springproject.entity.Room;
 import org.example.springproject.entity.Sensor;
 import org.example.springproject.service.RoomService;
+import org.example.springproject.service.SensorService;
 import org.example.springproject.util.RoomMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 @Service
@@ -21,22 +24,17 @@ public class RoomServiceImpl implements RoomService {
     private Firestore firestore;
     private static final String ROOM_COLLECTION = "rooms";
     private static final String USER_COLLECTION = "users";
+    private static final String SENSOR_COLLECTION = "sensors";
+    private final SensorServiceImpl sensorService;
 
+    @Autowired
+    public RoomServiceImpl(Firestore firestore, SensorServiceImpl sensorService) {
+        this.firestore = firestore;
+        this.sensorService = sensorService;
+    }
     public void roomVerification(Room room){
-        if(room.getUserId().isEmpty()){
+        if(room.getUserId().isEmpty()) {
             throw new RuntimeException("User with id: " + room.getUserId() + " doesn't exist!");
-        }
-        if(room.getSensors().isEmpty()){
-            throw new RuntimeException("Room has no sensors!");
-        }
-        List<Sensor> sensorList=room.getSensors();
-        for(Sensor sensor:sensorList){
-            if(sensor.getDetails().getPort() < 1 || sensor.getDetails().getPort() > 40){
-                throw new RuntimeException("Sensor port must be between 1 and 40");
-            }
-            if(sensor.getDetails().getSensorName().isEmpty() || sensor.getDetails().getSensorName().length() > 30) {
-                throw new RuntimeException("Length of the sensor name must be below 30");
-            }
         }
     }
     private List<RoomDTO> getRoomDTOS(List<QueryDocumentSnapshot> documents) {
@@ -63,7 +61,7 @@ public class RoomServiceImpl implements RoomService {
 
             DocumentReference roomRef = firestore.collection(ROOM_COLLECTION).document();
             roomRef.set(room).get();
-            return new RoomDTO(roomRef.getId(),room.getSensors());
+            return new RoomDTO(roomRef.getId(),room.getSensors(),room.getName());
         }catch (ExecutionException | InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Error during Firestore operation: " + e.getMessage(), e);
@@ -85,7 +83,7 @@ public class RoomServiceImpl implements RoomService {
             roomRef.delete().get();
 
             assert room != null;
-            return new RoomDTO(id,room.getSensors());
+            return new RoomDTO(id,room.getSensors(),room.getName());
         }catch (ExecutionException | InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Error during Firestore operation: " + e.getMessage(), e);
@@ -111,7 +109,7 @@ public class RoomServiceImpl implements RoomService {
             currentRoom.setSensors(updatedRoom.getSensors());
 
             roomRef.set(currentRoom).get();
-            return new RoomDTO(id,currentRoom.getSensors());
+            return new RoomDTO(id,currentRoom.getSensors(), currentRoom.getName());
         }catch (ExecutionException | InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Error during Firestore operation: " + e.getMessage(), e);
@@ -147,6 +145,39 @@ public class RoomServiceImpl implements RoomService {
             throw new RuntimeException("Error during Firestore operation: " + e.getMessage(), e);
         } catch (Exception e) {
             throw new RuntimeException("Error while fetching the rooms by userId: " + e.getMessage(), e);
+        }
+    }
+    @Override
+    public RoomDTO addSensorToRoom(String id, String sensorId){
+        try{
+            DocumentReference roomRef = firestore.collection(ROOM_COLLECTION).document(id);
+            DocumentSnapshot roomSnapshot = roomRef.get().get();
+
+            if(!roomSnapshot.exists()){
+                throw new RuntimeException("Room with id: "+ id +" doesn't exist!");
+            }
+
+            DocumentReference sensorRef = firestore.collection(SENSOR_COLLECTION).document(sensorId);
+            DocumentSnapshot sensorSnapshot = sensorRef.get().get();
+
+            if(!sensorSnapshot.exists()){
+                throw new RuntimeException("Sensor with id: "+ sensorId +" doesn't exist!");
+            }
+            Sensor sensor = sensorService.deserializeSensor(sensorSnapshot);
+
+            @SuppressWarnings("unchecked")
+            List<Sensor> sensorsList = (List<Sensor>) roomSnapshot.get("sensors");
+            if (sensorsList == null) {
+                sensorsList = new ArrayList<>();
+            }
+
+            sensorsList.add(sensor);
+            roomRef.update("sensors", sensorsList).get();
+
+            return new RoomDTO(id,sensorsList, roomSnapshot.getString("name"));
+
+        } catch (ExecutionException | InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 }

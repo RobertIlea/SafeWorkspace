@@ -10,12 +10,12 @@ public class RoomMapper {
         if(roomDTO == null){
             return null;
         }
-        return new Room(roomDTO.getId(),roomDTO.getSensors());
+        return new Room(roomDTO.getId(),roomDTO.getSensors(), roomDTO.getName());
     }
     public static RoomDTO toDTO(String id, Room room){
         if(room == null){
             return null;
         }
-        return new RoomDTO(id, room.getSensors());
+        return new RoomDTO(id, room.getSensors(),room.getName());
     }
 }

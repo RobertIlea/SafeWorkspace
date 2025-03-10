@@ -1,7 +1,6 @@
 package org.example.springproject.controller;
 
 import org.example.springproject.dto.SensorDTO;
-import org.example.springproject.dto.UserDTO;
 import org.example.springproject.entity.Sensor;
 import org.example.springproject.service.SensorService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +19,15 @@ public class SensorController {
     @Autowired
     private SensorService sensorService;
 
+    @GetMapping("/{sensorId}")
+    public ResponseEntity<SensorDTO> getSensorById(@PathVariable String sensorId){
+        try{
+            SensorDTO sensorDTO = sensorService.getSensorById(sensorId);
+            return ResponseEntity.ok(sensorDTO);
+        }catch (Exception e){
+            return ResponseEntity.badRequest().body(new SensorDTO());
+        }
+    }
     @GetMapping("/")
     public ResponseEntity<List<SensorDTO>> getSensors(){
         try{
@@ -77,5 +85,10 @@ public class SensorController {
             SensorDTO errorDTO = new SensorDTO();
             return new ResponseEntity<>(errorDTO, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+    @GetMapping("/types")
+    public ResponseEntity<List<String>> getSensorsTypes(){
+        List<String> sensorsTypes = sensorService.getSensorsType();
+        return ResponseEntity.ok(sensorsTypes);
     }
 }
