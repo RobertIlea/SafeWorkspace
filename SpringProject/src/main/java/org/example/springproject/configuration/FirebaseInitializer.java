@@ -17,8 +17,9 @@ public class FirebaseInitializer {
     @Bean
     public Firestore getDb() throws IOException {
         // Load the service account key from the classpath
+        String serviceAccountKey = System.getenv("SPACE_MONITORING_SYSTEM");
         FileInputStream serviceAccount =
-                new FileInputStream("src/main/resources/serviceAccountKey.json");
+                new FileInputStream(serviceAccountKey);
 
         // Initialize Firebase with the service account credentials
         FirebaseOptions options = FirebaseOptions.builder()
