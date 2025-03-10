@@ -1,5 +1,6 @@
 package org.example.springproject.configuration;
 
+import com.google.gson.Gson;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -21,17 +22,15 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessagingException;
 
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 @Configuration
 
 public class MqttConfig {
-    private final String brokerUrl = "tcp://broker.hivemq.com:1883";
-    private final String topicDht22Temperature = "sensor/dht22/temperature";
-    private final String topicDht22Humidity = "sensor/dht22/humidity";
-    private SensorType sensorType = SensorType.DHT22;
-    private Details details = new Details("Temperature and humidity",0,2);
-    private Sensor sensorDht22 = new Sensor(sensorType,details);
+    private final String brokerUrl = "tcp://broker.emqx.io:1883";
+    private final String topicDht22= "sensor/dht22/data";
 
     @Bean
     public MessageChannel mqttInputChannel() {
@@ -61,14 +60,13 @@ public class MqttConfig {
             }
         });
         client.connect();
-        client.subscribe(topicDht22Temperature);
-        client.subscribe(topicDht22Humidity);
+        client.subscribe(topicDht22);
         return client;
     }
     @Bean
     public MqttPahoMessageDrivenChannelAdapter inbound() {
         MqttPahoMessageDrivenChannelAdapter adapter =
-                new MqttPahoMessageDrivenChannelAdapter(brokerUrl, "testClient", topicDht22Temperature, topicDht22Humidity);
+                new MqttPahoMessageDrivenChannelAdapter(brokerUrl, "testClient", topicDht22);
         adapter.setCompletionTimeout(8000);
         adapter.setConverter(new DefaultPahoMessageConverter());
         adapter.setQos(0);
@@ -85,23 +83,33 @@ public class MqttConfig {
                 String payload = (String) message.getPayload();
                 System.out.println("Processed message: " + payload);
                 String topic = message.getHeaders().get(MqttHeaders.RECEIVED_TOPIC).toString();
-                if (topic.equals(topicDht22Temperature)) {
-                    details.setValue(Float.parseFloat(payload));
+                if (topic.equals(topicDht22)) {
                     System.out.println("Temperature received: " + payload);
                 }
-                if (topic.equals(topicDht22Humidity)) {
-                    details.setHumidity(Float.parseFloat(payload));
-                    System.out.println("Humidity received: " + payload);
-                }
-                String sensorId = "3f0ZfQyq6P0XQL7jUpgX";
+                // Parse JSON
+                Gson gson = new Gson();
+                @SuppressWarnings("unchecked")
+                Map<String, Object> data = gson.fromJson(payload,Map.class);
+                float temperature = ((Number) data.get("temperature")).floatValue();
+                float humidity = ((Number) data.get("humidity")).floatValue();
+                long timestamp = ((Number) data.get("timestamp")).longValue();
 
 
-                SensorDTO sensorDTO = new SensorDTO(sensorId, sensorType, details);
-                try {
+                Map<String,Float> sensorData = new HashMap<>();
+                sensorData.put("temperature",temperature);
+                sensorData.put("humidity",humidity);
+                Details details = new Details(timestamp,sensorData);
+
+                String sensorId = "djx9XQ6FoHkthQloVmsc";
+
+
+                SensorDTO sensorDTO = new SensorDTO(sensorId,"DHT22",21, List.of(details));
+                try{
                     sensorService.saveSensorData(sensorDTO);
                 } catch (ExecutionException | InterruptedException e) {
                     throw new RuntimeException(e);
                 }
+
 
             }
         };
