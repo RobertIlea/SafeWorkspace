@@ -1,0 +1,54 @@
+<div class="split-container">
+    <div class="quote-container">
+      <h1>Welcome to Room Monitoring System.</h1>
+    </div>
+    <div class="form-container">
+      <div class="login-container">
+        <h3>Login</h3>
+        <form>
+          <div class="input-box">
+            <label for="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              [(ngModel)]="email"
+              name="Email"
+              placeholder="Enter your email"
+              required
+            />
+          </div>
+          <div class="input-box">
+            <label for="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              [(ngModel)]="password"
+              name="Password"
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+          <button
+            type="button"
+            class="primary-btn"
+            (click)="onLogin()"
+          >
+            Login
+          </button>
+        </form>
+        <div class="google-login-container">
+          <button
+            type="button"
+            (click)="loginWithGoogle()"
+            class="google-login-btn"
+          >
+            <img src="https://cdn-icons-png.flaticon.com/512/324/324116.png" alt="Google Logo" />
+            Login with Google
+          </button>
+        </div>
+        <p class="switch-text">
+          Don't have an account? <a href="/register">Register here</a>
+        </p>
+      </div>
+    </div>
+  </div>

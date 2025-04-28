@@ -1,0 +1,58 @@
+<main class="cards">
+    <div class="row">
+      <mat-card class="card small-card" [@cardAnimation]>Card 1</mat-card>
+      <mat-card class="card small-card" [@cardAnimation]>
+
+        <mat-card-content class="sensor-hystory-content">
+
+          <div class="form-fields">
+            <mat-form-field appearance="outline">
+              <mat-label>Select Room</mat-label>
+              <mat-select [(value)]="selectedRoom" (selectionChange)="select_room($event.value)">
+                <mat-option *ngFor="let room of rooms" [value]="room">{{ room.name }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+        
+            <mat-form-field appearance="outline" *ngIf="selectedRoom">
+              <mat-label>Select Sensor</mat-label>
+              <mat-select [(value)]="selectedSensor" (selectionChange)="select_sensor($event.value)">
+                <mat-option *ngFor="let sensor of selectedRoom.sensors" [value]="sensor">{{ sensor.sensorType }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+        
+            <mat-form-field appearance="outline" *ngIf="selectedSensor">
+              <input matInput [matDatepicker]="picker" placeholder="Choose a date" [(ngModel)]="selectedDate" (dateChange)="selected_date($event.value)">
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
+          </div>
+        
+    
+          <div class="chart-container" *ngIf="selectedSensor">
+            <canvas baseChart
+              [data]="chartData"
+              [options]="chartOptions"
+              [type]="'line'">
+            </canvas>
+          </div>
+        </mat-card-content>
+          
+      </mat-card>
+    </div>
+    <mat-card class="card large-card" [@cardAnimation]>
+      <mat-card-title class="list-title">List of your rooms</mat-card-title>
+      <div class="rooms-container">
+        <div *ngFor="let room of rooms" class="dashboard-card" (click)="open_room_dialog(room)">
+          <p>{{room.name}}</p>
+        </div>
+
+        <div class="dashboard-card add-room">
+          <button mat-fab color="primary" (click)="open_add_room_dialog()">
+            <mat-icon>add</mat-icon>
+          </button>
+        </div>
+  </div>
+  </mat-card>         
+</main>
+
+  
