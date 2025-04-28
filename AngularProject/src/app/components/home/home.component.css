@@ -1,0 +1,21 @@
+.container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+  }
+  
+  .sidebar {
+    flex: 0 0 20%;
+    height: 100vh;
+    background-color: #4A4947;
+  }
+  
+  .dashboard {
+    flex: 1 1 80%;
+    height: 100vh;
+    background-color: #FAF7F0;
+    padding: 20px;
+    overflow: auto;
+  }
+  

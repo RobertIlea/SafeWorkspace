@@ -1,0 +1,11 @@
+.sensor-card {
+    margin-bottom: 15px;
+  }
+  
+  mat-dialog-content {
+    max-height: 400px;
+    overflow: auto;
+  }
+  
+
+  

@@ -6,16 +6,17 @@ import org.example.springproject.entity.Room;
 import org.example.springproject.entity.User;
 
 public class RoomMapper {
-    public static Room toEntity(RoomDTO roomDTO){
-        if(roomDTO == null){
+    public static RoomDTO toDTO(String id, Room room) {
+        if (room == null) {
             return null;
         }
-        return new Room(roomDTO.getId(),roomDTO.getSensors(), roomDTO.getName());
+        return new RoomDTO(id,SensorMapper.toDTOList(room.getSensors()), room.getName(), room.getUserId());
     }
-    public static RoomDTO toDTO(String id, Room room){
-        if(room == null){
+
+    public static Room toEntity(RoomDTO roomDTO) {
+        if (roomDTO == null) {
             return null;
         }
-        return new RoomDTO(id, room.getSensors(),room.getName());
+        return new Room(roomDTO.getId(), SensorMapper.toEntityList(roomDTO.getSensors()), roomDTO.getName());
     }
 }

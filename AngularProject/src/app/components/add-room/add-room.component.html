@@ -1,0 +1,14 @@
+<h2 mat-dialog-title>Add New Room</h2>
+
+<mat-dialog-content>
+  <mat-form-field appearance="fill" style="width: 100%;">
+    <mat-label>Room Name</mat-label>
+    <input matInput [(ngModel)]="newRoomName">
+    <mat-error *ngIf="errorMessage">{{ errorMessage }}</mat-error>
+  </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close_dialog()">Cancel</button>
+  <button mat-button color="primary" (click)="add_room()">Add</button>
+</mat-dialog-actions>

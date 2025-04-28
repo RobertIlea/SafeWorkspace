@@ -1,0 +1,25 @@
+<h2 mat-dialog-title>{{ data.room.name }}</h2>
+
+<mat-dialog-content>
+  <div *ngFor="let sensor of data.room.sensors">
+    <mat-card class="sensor-card">
+      <mat-card-header>
+        <mat-card-title>{{ sensor.sensorType }}</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngFor="let detail of sensor.details">
+          <p><b>{{ detail.timestamp?.seconds ? (detail.timestamp.seconds * 1000 | date:'medium') : '' }}</b></p>
+          <div *ngFor="let data of (detail.data | keyvalue)">
+            <p>
+              {{ data.key }}: {{ data.value }}{{ data.key === 'temperature' ? '°C' : (data.key === 'humidity' ? '%' : '') }}
+            </p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Close</button>
+</mat-dialog-actions>
