@@ -1,6 +1,5 @@
 package org.example.springproject.entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 
 import com.google.cloud.Timestamp;
 import java.util.Map;

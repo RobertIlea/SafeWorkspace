@@ -1,12 +1,13 @@
 package org.example.springproject.entity;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+
 import java.util.List;
 
 public class Room {
     private String userId;
     private List<Sensor> sensors;
     private String name;
-
     public Room(){}
 
     public Room(String userId, List<Sensor> sensors, String name){

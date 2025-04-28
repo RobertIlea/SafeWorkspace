@@ -8,6 +8,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.example.springproject.dto.SensorDTO;
 import org.example.springproject.entity.Details;
 import org.example.springproject.entity.Sensor;
+import org.example.springproject.service.RoomService;
 import org.example.springproject.service.SensorService;
 import org.example.springproject.util.SensorType;
 import org.springframework.context.annotation.Bean;
@@ -31,6 +32,13 @@ import java.util.concurrent.ExecutionException;
 public class MqttConfig {
     private final String brokerUrl = "tcp://broker.emqx.io:1883";
     private final String topicDht22= "sensor/dht22/data";
+    private final SensorService sensorService;
+    private final RoomService roomService;
+
+    public MqttConfig(SensorService sensorService, RoomService roomService) {
+        this.sensorService = sensorService;
+        this.roomService = roomService;
+    }
 
     @Bean
     public MessageChannel mqttInputChannel() {
@@ -41,7 +49,7 @@ public class MqttConfig {
         MqttClient client = new MqttClient(brokerUrl, "Robicu03");
         client.setCallback(new MqttCallback() {
             @Override
-            public void messageArrived(String topic, MqttMessage message) throws Exception {
+            public void messageArrived(String topic, MqttMessage message) {
                 System.out.println("Message received on topic " + topic + ": " + new String(message.getPayload()));
             }
 
@@ -74,6 +82,20 @@ public class MqttConfig {
         return adapter;
     }
 
+    private void processSensorDataForRoom1(SensorDTO sensorDTO) {
+        // Process the sensor data for room 1
+        System.out.println("Processing sensor data for room 1: " + sensorDTO.toString());
+        System.out.println("Id of the sensor: " + sensorDTO.getId());
+
+        String roomId = "5Ejp4XJFAS7XwkZV7Xg7";
+        try{
+            sensorService.saveSensorData(sensorDTO);
+            roomService.updateRoomWithSensorData(roomId, sensorDTO);
+            System.out.println("Room 1 saved");
+        } catch (ExecutionException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
     @Bean
     @ServiceActivator(inputChannel = "mqttInputChannel")
     public MessageHandler handler(SensorService sensorService) {
@@ -100,16 +122,12 @@ public class MqttConfig {
                 sensorData.put("humidity",humidity);
                 Details details = new Details(timestamp,sensorData);
 
-                String sensorId = "djx9XQ6FoHkthQloVmsc";
-
+                // DHT22 SENSOR from room 1
+                String sensorId = "DQZbnMngXpqwP67hMVUx";
 
                 SensorDTO sensorDTO = new SensorDTO(sensorId,"DHT22",21, List.of(details));
-                try{
-                    sensorService.saveSensorData(sensorDTO);
-                } catch (ExecutionException | InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-
+                System.out.println("Sensor id: " + sensorDTO.getId());
+                processSensorDataForRoom1(sensorDTO);
 
             }
         };

@@ -37,11 +37,11 @@ public class UserServiceImpl implements UserService {
         if(!isEmailValid(user.getEmail())){
             throw new RuntimeException("Invalid email format!");
         }
-        if(user.getName().length() < 5 || user.getName().length() > 20){
+        if(user.getName().length() < 5 || user.getName().length() > 32){
             throw new RuntimeException("Name length must be between 5 and 20");
         }
-        if(user.getPassword().isEmpty() || user.getPassword().length() < 8 || user.getPassword().length() > 16){
-            throw new RuntimeException("Length of the password must be between 8 and 16");
+        if(user.getPassword().isEmpty() || user.getPassword().length() < 8 ){
+            throw new RuntimeException("Length of the password must be greater than 8 characters");
         }
     }
     @Override
@@ -61,7 +61,7 @@ public class UserServiceImpl implements UserService {
             DocumentReference userRef = firestore.collection(USER_COLLECTION).document();
             userRef.set(user).get();
 
-            return new UserDTO(userRef.getId(),user.getName(),user.getEmail(),user.getPassword());
+            return new UserDTO(userRef.getId(),user.getName(),user.getEmail());
         }catch (ExecutionException | InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Error during Firestore operation: " + e.getMessage(), e);
@@ -83,7 +83,7 @@ public class UserServiceImpl implements UserService {
 
             userRef.delete().get();
             assert user != null;
-            return new UserDTO(id,user.getName(),user.getEmail(),user.getPassword());
+            return new UserDTO(id,user.getName(),user.getEmail());
         }catch (ExecutionException | InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Error during Firestore operation: " + e.getMessage(), e);
@@ -115,7 +115,7 @@ public class UserServiceImpl implements UserService {
 
 
             userRef.set(currentUser).get();
-            return new UserDTO(id, currentUser.getName(), currentUser.getEmail(), currentUser.getPassword());
+            return new UserDTO(id, currentUser.getName(), currentUser.getEmail());
         }catch (ExecutionException | InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Error during Firestore operation: " + e.getMessage(), e);
@@ -157,10 +157,37 @@ public class UserServiceImpl implements UserService {
                 throw new RuntimeException("User with id: " + id + " doesn't exist in database!");
             }
             user = document.toObject(User.class);
-            return new UserDTO(id,user.getName(),user.getEmail(),user.getPassword());
+            return new UserDTO(id,user.getName(),user.getEmail());
 
         } catch (ExecutionException | InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+    @Override
+    public User getUserByEmail(String email){
+        System.out.println(email);
+        try{
+            ApiFuture<QuerySnapshot> future = firestore.collection(USER_COLLECTION).whereEqualTo("email", email).get();
+            QuerySnapshot querySnapshot = future.get();
+
+            if(querySnapshot.isEmpty()){
+                throw new RuntimeException("User with email: " + email + " doesn't exist in database!");
+            }
+
+            QueryDocumentSnapshot document = querySnapshot.getDocuments().get(0);
+            System.out.println("Document id: " + document.getId());
+
+            User user = document.toObject(User.class);
+
+            return new User(user.getName(),user.getEmail(),user.getPassword());
+        } catch (ExecutionException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public UserDTO register(UserDTO userDTO, String password){
+        User user = UserMapper.toEntity(userDTO);
+        user.setPassword(passwordEncoder.encode(password));
+        return addUser(user);
     }
 }

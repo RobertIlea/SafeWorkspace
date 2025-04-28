@@ -27,12 +27,12 @@ public class UserController {
             return ResponseEntity.ok(users);
         }catch (RuntimeException e) {
             List<UserDTO> errorList = new ArrayList<>();
-            UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "", "");
+            UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "");
             errorList.add(errorDTO);
             return ResponseEntity.badRequest().body(errorList);
         } catch (Exception e) {
             List<UserDTO> errorList = new ArrayList<>();
-            UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "", "");
+            UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "");
             errorList.add(errorDTO);
             return new ResponseEntity<>(errorList, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -43,10 +43,10 @@ public class UserController {
             UserDTO userDTO = userService.getUserById(id);
             return ResponseEntity.ok(userDTO);
         }catch (RuntimeException e){
-            UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "", "");
+            UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "");
             return ResponseEntity.badRequest().body(errorDTO);
         }catch (Exception e){
-            UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "", "");
+            UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "");
             return new ResponseEntity<>(errorDTO, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -56,10 +56,10 @@ public class UserController {
             UserDTO userDTO = userService.addUser(user);
             return ResponseEntity.ok(userDTO);
         }catch (RuntimeException e){
-            UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "", "");
+            UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "");
             return ResponseEntity.badRequest().body(errorDTO);
         }catch (Exception e){
-            UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "", "");
+            UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "");
             return new ResponseEntity<>(errorDTO, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -70,10 +70,10 @@ public class UserController {
             UserDTO userDTO = userService.deleteUserbyId(id);
             return ResponseEntity.ok(userDTO);
         } catch (RuntimeException e) {
-            UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "", "");
+            UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "");
             return ResponseEntity.badRequest().body(errorDTO);
         } catch (Exception e){
-            UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "", "");
+            UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "");
             return new ResponseEntity<>(errorDTO, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -83,12 +83,25 @@ public class UserController {
             UserDTO userDTO = userService.updateUser(id,user);
             return ResponseEntity.ok(userDTO);
         }catch (RuntimeException e) {
-            UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "", "");
+            UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "");
             return ResponseEntity.badRequest().body(errorDTO);
         } catch (Exception e){
-            UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "", "");
+            UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "");
             return new ResponseEntity<>(errorDTO, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
+    @GetMapping("/{email}")
+    public ResponseEntity<User> getUserByEmail(@RequestParam("email") String email){
+        try {
+            User user = userService.getUserByEmail(email);
+            System.out.println("Email from DB: " + email);
+            return ResponseEntity.ok(user);
+        } catch (RuntimeException e) {
+            User errorUser = new User("Error: " + e.getMessage(), "", "");
+            return ResponseEntity.badRequest().body(errorUser);
+        } catch (Exception e) {
+            User errorUser = new User("Error: " + e.getMessage(), "", "");
+            return new ResponseEntity<>(errorUser, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

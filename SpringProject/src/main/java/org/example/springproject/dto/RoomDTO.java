@@ -6,15 +6,17 @@ import java.util.List;
 
 public class RoomDTO {
     private String id;
-    private List<Sensor> sensors;
+    private List<SensorDTO> sensors;
     private String name;
+    private String userId;
     public RoomDTO() {
     }
 
-    public RoomDTO(String id, List<Sensor> sensors, String name) {
+    public RoomDTO(String id, List<SensorDTO> sensors, String name, String userId) {
         this.id = id;
         this.sensors = sensors;
         this.name = name;
+        this.userId = userId;
     }
 
     public String getId() {
@@ -26,11 +28,11 @@ public class RoomDTO {
     }
 
 
-    public List<Sensor> getSensors() {
+    public List<SensorDTO> getSensors() {
         return sensors;
     }
 
-    public void setSensors(List<Sensor> sensors) {
+    public void setSensors(List<SensorDTO> sensors) {
         this.sensors = sensors;
     }
     public String getName() {
@@ -40,5 +42,15 @@ public class RoomDTO {
     public void setName(String name) {
         this.name = name;
     }
+    public String getUserId() {
+        return userId;
+    }
 
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+    @Override
+    public String toString(){
+        return "room id: " + id + "Senzori: " + sensors + "nume camera: " + name + "user id: " + userId;
+    }
 }
