@@ -1,9 +1,8 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { Room } from '../models/room-mopdel';
+import {BehaviorSubject, Observable} from 'rxjs';
+import { Room } from '../models/room-model';
 import { Sensor } from '../models/sensor-model';
-// import { decodeJwtToken } from '../components/utils/jwt-utils';
 
 const BASE_URL = 'http://localhost:8080';
 
@@ -11,23 +10,40 @@ const BASE_URL = 'http://localhost:8080';
   providedIn: 'root'
 })
 export class RoomService {
-
+  private roomSubject = new BehaviorSubject<Room[]>([]);
   constructor(private http: HttpClient) { }
 
-  get_rooms_by_user_id(id: string): Observable<Room[]>{
-    // const token = localStorage.getItem('jwtToken');
 
-    return this.http.get<Room[]>(`${BASE_URL}/room/${id}`);
-    
+  rooms$ = this.roomSubject.asObservable();
+  setRooms(rooms: Room[]) {
+    this.roomSubject.next(rooms);
   }
-
-  add_room(room: Room): Observable<Room>{
+  // Get all the rooms based on logged user
+  get_rooms(): Observable<Room[]>{
     const token = localStorage.getItem('jwtToken');
-    
-    return this.http.post<Room>(`${BASE_URL}/room/`,room,{headers: new HttpHeaders({
-      'Authorization': `Bearer ${token}` 
-    })});
+
+    return this.http.get<Room[]>(`${BASE_URL}/room/`,{
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
   }
+
+  // Get the available rooms from firestore
+  get_available_rooms(): Observable<Room[]>{
+    return this.http.get<Room[]>(`${BASE_URL}/room/available`)
+  }
+
+  // Assign a room to the user
+  assign_room_to_user(data: {roomId: string, userId: string, roomName: string, sensorIds: string[]}): Observable<any>{
+    return this.http.post<any>(`${BASE_URL}/room/assign`,data)
+  }
+
+  // Free a used room
+  remove_user_from_room(roomId:string, userId: string){
+    return this.http.delete(`${BASE_URL}/room/${roomId}/remove/${userId}`);
+  }
+
   get_sensors_by_room_id(room_id:string): Observable<Sensor[]>{
     return this.http.get<Sensor[]>(`${BASE_URL}/room/${room_id}/sensors`);
   }

@@ -32,6 +32,9 @@ import { AddRoomComponent } from './components/add-room/add-room.component';
 import { BaseChartDirective } from 'ng2-charts';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { AlertComponent } from './components/alert/alert.component';
+import { AlertDialogComponent } from './components/alert-dialog/alert-dialog.component';
+import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dialog.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -43,6 +46,9 @@ import { MatNativeDateModule } from '@angular/material/core';
     CallbackComponent,
     RoomDialogComponent,
     AddRoomComponent,
+    AlertComponent,
+    AlertDialogComponent,
+    ConfirmDialogComponent,
   ],
   imports: [
     BrowserModule,
