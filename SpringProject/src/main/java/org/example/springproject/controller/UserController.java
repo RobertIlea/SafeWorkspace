@@ -90,18 +90,15 @@ public class UserController {
             return new ResponseEntity<>(errorDTO, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    @GetMapping("/{email}")
-    public ResponseEntity<User> getUserByEmail(@RequestParam("email") String email){
+    @GetMapping("/email/{email}")
+    public ResponseEntity<String> getUserIdByEmail(@PathVariable String email){
         try {
-            User user = userService.getUserByEmail(email);
-            System.out.println("Email from DB: " + email);
-            return ResponseEntity.ok(user);
+            String userId = userService.getUserIdByEmail(email);
+            return ResponseEntity.ok(userId);
         } catch (RuntimeException e) {
-            User errorUser = new User("Error: " + e.getMessage(), "", "");
-            return ResponseEntity.badRequest().body(errorUser);
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            User errorUser = new User("Error: " + e.getMessage(), "", "");
-            return new ResponseEntity<>(errorUser, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

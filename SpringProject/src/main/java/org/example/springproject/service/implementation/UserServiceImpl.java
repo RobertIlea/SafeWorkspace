@@ -185,9 +185,20 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    public UserDTO register(UserDTO userDTO, String password){
-        User user = UserMapper.toEntity(userDTO);
-        user.setPassword(passwordEncoder.encode(password));
-        return addUser(user);
+    @Override
+    public String getUserIdByEmail(String email){
+        try{
+            ApiFuture<QuerySnapshot> future = firestore.collection(USER_COLLECTION).whereEqualTo("email", email).get();
+            QuerySnapshot querySnapshot = future.get();
+
+            if(querySnapshot.isEmpty()){
+                throw new RuntimeException("User with email: " + email + " doesn't exist in database!");
+            }
+
+            QueryDocumentSnapshot document = querySnapshot.getDocuments().get(0);
+            return document.getId();
+        } catch (ExecutionException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

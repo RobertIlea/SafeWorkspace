@@ -1,14 +1,21 @@
 package org.example.springproject.controller;
 
+import com.google.cloud.firestore.DocumentSnapshot;
 import org.example.springproject.dto.SensorDTO;
+import org.example.springproject.entity.Details;
 import org.example.springproject.entity.Sensor;
 import org.example.springproject.service.SensorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.service.annotation.GetExchange;
 
+
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -91,4 +98,44 @@ public class SensorController {
         List<String> sensorsTypes = sensorService.getSensorsType();
         return ResponseEntity.ok(sensorsTypes);
     }
+    @GetMapping("/{sensorId}/data/{date}")
+    public ResponseEntity<List<Details>> getSensorDataByDate(@PathVariable String sensorId, @PathVariable String date) {
+        try {
+            System.out.println("Received date: " + date);
+            if (!date.matches("\\d{4}-\\d{2}-\\d{2}")) {
+                return ResponseEntity.badRequest().build();
+            }
+            SensorDTO sensorDTO = sensorService.getSensorById(sensorId);
+            if(sensorDTO == null) {
+                System.out.println("Sensor not found");
+                return ResponseEntity.notFound().build();
+            }
+            LocalDate localDate = LocalDate.parse(date);
+            Date selectedDate = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+            System.out.println("Parsed date: " + selectedDate);
+
+            List<Details> details = sensorService.getSensorDataByDate(sensorId, selectedDate);
+            System.out.println(details);
+            return ResponseEntity.ok(details);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    @GetMapping("/last-details")
+    public ResponseEntity<List<SensorDTO>> getAvailableSensors(){
+        try{
+            List<SensorDTO> sensors = sensorService.getAllSensorsWithLastDetail();
+            if(sensors.isEmpty()){
+                System.out.println("Sensor not found");
+                return ResponseEntity.notFound().build();
+            }
+            System.out.println(sensors);
+            return ResponseEntity.ok(sensorService.getAllSensorsWithLastDetail());
+        }catch (RuntimeException e){
+            System.out.println("Error while fetching available sensors: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
 }

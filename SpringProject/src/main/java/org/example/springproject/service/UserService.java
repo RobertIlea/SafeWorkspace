@@ -17,4 +17,6 @@ public interface UserService {
     UserDTO getUserById(String id);
 
     User getUserByEmail(String email);
+
+    String getUserIdByEmail(String email);
 }

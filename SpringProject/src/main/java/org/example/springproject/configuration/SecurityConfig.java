@@ -49,7 +49,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("login/", "/oauth2/**", "/error**","/user/**","/home/**","/room/**","/sensor/**").permitAll()
+                        .requestMatchers("/login/**", "/oauth2/**", "/error", "/user/**", "/home/**", "/room/**", "/sensor/**", "/alerts/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthFilter(jwtService,userService), UsernamePasswordAuthenticationFilter.class)

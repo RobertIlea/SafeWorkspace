@@ -17,7 +17,13 @@ public interface RoomService {
 
     List<RoomDTO> getRooms();
 
+    RoomDTO getRoomById(String roomId);
+
+    List<RoomDTO> getAvailableRooms();
+
     List<RoomDTO> getRoomsByUserId(String id);
+
+    List<RoomDTO> getRoomsByUserEmail(String email);
 
     RoomDTO addSensorToRoom(String id, String sensorId);
 
@@ -26,4 +32,8 @@ public interface RoomService {
     List<SensorDTO> getSensorsByRoomId(String id);
 
     String updateRoomWithSensorData(String roomId, SensorDTO sensorDTO) throws ExecutionException, InterruptedException;
+
+    RoomDTO assignRoomToUser(String roomId, String userId, String newName, List<String> selectedSensorIds);
+
+    RoomDTO removeUserFromRoom(String roomId, String userId);
 }

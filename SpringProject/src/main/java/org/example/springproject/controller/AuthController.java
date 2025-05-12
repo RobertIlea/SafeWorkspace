@@ -4,6 +4,7 @@ import org.example.springproject.dto.UserDTO;
 import org.example.springproject.entity.User;
 import org.example.springproject.service.JwtService;
 import org.example.springproject.service.UserService;
+import org.example.springproject.util.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
