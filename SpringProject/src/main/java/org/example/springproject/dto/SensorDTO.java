@@ -52,4 +52,14 @@ public class SensorDTO {
     public void setDetails(List<Details> details) {
         this.details = details;
     }
+
+    @Override
+    public String toString() {
+        return "SensorDTO{" +
+                "id='" + id + '\'' +
+                ", sensorType='" + sensorType + '\'' +
+                ", port=" + port +
+                ", details=" + details +
+                '}';
+    }
 }

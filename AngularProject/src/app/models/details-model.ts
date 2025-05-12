@@ -6,4 +6,9 @@ export class Details{
         this.timestamp = timestamp;
         this.data = data;
     }
+
+    get_timestamp_date(): Date | null {
+        if(!this.timestamp) return null;
+        return new Date(this.timestamp.seconds * 1000 + (this.timestamp.nanos || 0) / 1000000);
+    }
 }

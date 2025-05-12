@@ -51,6 +51,6 @@ public class RoomDTO {
     }
     @Override
     public String toString(){
-        return "room id: " + id + "Senzori: " + sensors + "nume camera: " + name + "user id: " + userId;
+        return "room id: " + id + " Senzori: " + sensors.toString() + " nume camera: " + name + " user id: " + userId;
     }
 }

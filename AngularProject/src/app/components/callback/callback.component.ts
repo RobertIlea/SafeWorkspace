@@ -15,7 +15,7 @@ export class CallbackComponent {
 
   ngOnInit(){
     const access_token = this.routeSnapshot.snapshot.queryParamMap.get('jwtToken');
-    console.log("Acces Jwt token:" + access_token);
+    console.log("Acces Jwt token received");
 
     const user_data = this.routeSnapshot.snapshot.queryParamMap.get('user');
     console.log("User data: " + user_data);

@@ -1,14 +1,34 @@
-<h2 mat-dialog-title>Add New Room</h2>
+<h2 mat-dialog-title>Add new room</h2>
 
 <mat-dialog-content>
   <mat-form-field appearance="fill" style="width: 100%;">
-    <mat-label>Room Name</mat-label>
+    <mat-label>New Room Name</mat-label>
     <input matInput [(ngModel)]="newRoomName">
-    <mat-error *ngIf="errorMessage">{{ errorMessage }}</mat-error>
+    <mat-hint *ngIf="selectedRoom">Original name: {{ selectedRoom.name }}</mat-hint>
   </mat-form-field>
+
+  <mat-form-field appearance="fill" style="width: 100%;">
+    <mat-label>Select room</mat-label>
+    <mat-select [(ngModel)]="selectedRoom" (selectionChange)="on_room_change()">
+      <mat-option *ngFor="let room of availableRooms" [value]="room">
+        {{ room.name }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="fill" style="width: 100%;" *ngIf="availableSensors.length > 0">
+    <mat-label>Select Sensors</mat-label>
+    <mat-select multiple [(ngModel)]="selectedSensors">
+      <mat-option *ngFor="let sensor of availableSensors" [value]="sensor">
+        {{ sensor.sensorType }} (Port: {{ sensor.port }})
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-error *ngIf="errorMessage">{{ errorMessage }}</mat-error>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
   <button mat-button (click)="close_dialog()">Cancel</button>
-  <button mat-button color="primary" (click)="add_room()">Add</button>
+  <button mat-button color="primary" (click)="assign_room_to_user()">Add</button>
 </mat-dialog-actions>

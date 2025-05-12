@@ -35,4 +35,12 @@ public class Details {
     public void setData(Map<String, Float> data) {
         this.data = data;
     }
+
+    @Override
+    public String toString() {
+        return "Details{" +
+                "timestamp=" + timestamp +
+                ", data=" + data +
+                '}';
+    }
 }

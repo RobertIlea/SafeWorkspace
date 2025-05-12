@@ -1,25 +1,23 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { RoomService } from '../../services/room.service';
-import { Room } from '../../models/room-mopdel';
+import { Room } from '../../models/room-model';
 import { SensorService } from '../../services/sensor.service';
 import { Sensor } from '../../models/sensor-model';
 import { trigger, style, animate, transition } from '@angular/animations';
 import { MatDialog } from '@angular/material/dialog';
 import { RoomDialogComponent } from '../room-dialog/room-dialog.component';
-import { withDebugTracing } from '@angular/router';
 import { AddRoomComponent } from '../add-room/add-room.component';
 import { ChartData, ChartOptions } from 'chart.js';
+import { Details } from '../../models/details-model';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import {interval, Subscription, switchMap} from 'rxjs';
+import { BaseChartDirective } from 'ng2-charts';
 
-function parse_firestore_timestamp(timestamp: {seconds: number, nanos?: number}):Date{
-  if(!timestamp || typeof timestamp.seconds !== 'number'){
-    return new Date();
-  }
-  return new Date(timestamp.seconds * 1000);
-}
 
 @Component({
   selector: 'app-dashboard',
-  standalone: false, 
+  standalone: false,
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
   animations: [
@@ -31,34 +29,45 @@ function parse_firestore_timestamp(timestamp: {seconds: number, nanos?: number})
     ])
   ]
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy{
+  @ViewChild('realtimeChart') chart?:BaseChartDirective;
   rooms: Room[] = [];
-  errorMessage: string = '';
-  newRoomName: string = '';
-  user: string = "4Uqgxsat3pZVz2XSksOg";
-  showDialog: boolean = false; 
-  sensors: Sensor[] = [];
   selectedRoom: Room | null = null;
   selectedSensor: Sensor | null = null;
   selectedDate: Date = new Date();
   hasDataForChart: boolean = true;
+  sensorSub: Subscription | null = null;
 
   constructor(
     private roomService: RoomService,
     private sensorService: SensorService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar,
   ){}
 
   ngOnInit(): void {
-      this.get_rooms_by_user_id();
+      this.get_rooms();
+      this.prepare_chart_data();
   }
-  
-  get_rooms_by_user_id(): void {
-    this.roomService.get_rooms_by_user_id(this.user).subscribe({
+  ngOnDestroy() {
+    this.sensorSub?.unsubscribe();
+  }
+  getGasLevelMessage(value: number): string {
+    if (value < 200) return "Air quality: Excellent";
+    if (value < 400) return "Low gas presence";
+    if (value < 700) return "Moderate gas level";
+    return "Dangerous gas level!";
+  }
+  // Card 3
+  get_rooms(): void {
+    this.roomService.get_rooms().subscribe({
       next: (room: Room[]) => {
         this.rooms = room;
-        console.log("Rooms: " , this.rooms[0]);   
-        
+        this.roomService.setRooms(room);
+
+        console.log("Rooms: " , this.rooms[0]);
+        console.log("Sensors: ", this.rooms[0].sensors);
+
         if(this.rooms.length > 0){
           this.selectedRoom = this.rooms[0];
           this.selectedSensor = this.selectedRoom?.sensors?.[0] ?? null;
@@ -84,16 +93,46 @@ export class DashboardComponent implements OnInit {
     })
   }
 
-  open_room_dialog(room: any){
+  open_room_dialog(room: Room){
     this.dialog.open(RoomDialogComponent, {
       width: '600px',
       data: { room }
     });
   }
 
-  get_sensors(){
+  confirm_remove(room: Room, event: MouseEvent){
+      event.stopPropagation(); // Prevent the open of the dialog
 
+      this.dialog.open(ConfirmDialogComponent, {
+        width: '300px',
+        data: {
+          title: 'Confirm Delete',
+          message: `Are you sure you want to remove "${room.name}"?`
+        }
+      }).afterClosed().subscribe(result => {
+        if (result === true) {
+           if (room.id && room.userId) {
+               this.remove_room(room.id, room.userId);
+           } else {
+               console.error('Room ID or User ID is undefined.');
+           }
+        }
+      });
   }
+
+  remove_room(roomId: string, userId: string){
+    this.roomService.remove_user_from_room(roomId,userId).subscribe({
+      next: () => {
+        this.rooms = this.rooms.filter(r => r.id !== roomId);
+        this.snackBar.open('Room removed successfully.', 'Close', { duration: 3000 });
+      },
+      error: (err) => {
+        console.error('Failed to remove room:', err);
+        this.snackBar.open('Failed to remove room.', 'Close', { duration: 3000 });
+      }
+    })
+  }
+  // End of card 3
 
   // LOGIC OF THE CHART //
 
@@ -117,6 +156,8 @@ export class DashboardComponent implements OnInit {
               return `${label}: ${value} °C`;
             } else if (label.toLowerCase().includes('humidity')) {
               return `${label}: ${value} %`;
+            }else if (label.toLowerCase().includes('gas')) {
+              return `${label}: ${value} – ${this.getGasLevelMessage(value)}`;
             }
             return `${label}: ${value}`;
           }
@@ -131,15 +172,16 @@ export class DashboardComponent implements OnInit {
     this.prepare_chart_data();
   }
 
-  select_sensor(sensor: Sensor){
+  select_sensor(sensor: Sensor) {
     this.selectedSensor = sensor;
     this.prepare_chart_data();
-  }
+}
 
   selected_date(date: Date){
     this.selectedDate = date;
     this.prepare_chart_data();
   }
+
   get_random_color(): string {
     const letters = '0123456789ABCDEF';
     let color = '#';
@@ -148,53 +190,106 @@ export class DashboardComponent implements OnInit {
     }
     return color;
   }
-  prepare_chart_data(){
-    if(!this.selectedSensor) return;
 
-    const selectedDay = this.selectedDate.toDateString();
-
-    const filteredData = this.selectedSensor.details?.filter(detail =>{
-      if(!detail.timestamp) return false;
-
-      const dateObj = parse_firestore_timestamp(detail.timestamp);
-      console.log("Data dupa parsare: " + dateObj);
-
-      const detailDate = dateObj.toDateString();
-      return detailDate === selectedDay;
+  updateSensorDetailsInRooms(sensorId: string, details: Details[]) {
+    const roomIndex = this.rooms.findIndex(room => {
+      return room.sensors && room.sensors.some(sensor => sensor.id === sensorId);
     });
 
-    this.hasDataForChart = (filteredData?.length ?? 0) > 0;
+    if(roomIndex !== -1) {
+      const sensorIndex = this.rooms[roomIndex].sensors?.findIndex(sensor => sensor.id === sensorId);
 
-    if(!this.hasDataForChart){
-      this.chartData = {labels:[],datasets:[]};
-      return;
-    }
-    
-    // Extract all the keys from data map
-    const allKeys = Object.keys(filteredData?.[0]?.data?? {});
-    
-    // Dataset pentru fiecare cheie
-    const datasets = allKeys.map(key => ({
-      label: key.charAt(0).toUpperCase() + key.slice(1),
-      data: (filteredData ?? []).map(d => d.data?.[key] ?? 0),
-      fill: false,
-      tension: 0.3,
-      borderColor: this.get_random_color(),
-      backgroundColor: this.get_random_color(),
-      pointRadius: 5,
-      pointHoverRadius: 7,
-      showLine: true,
-    }));
-
-    this.chartData = {
-      labels: (filteredData ?? []).map(d => {
-        return parse_firestore_timestamp(d.timestamp!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      }),
-      datasets: datasets,
+      if(sensorIndex !== -1) {
+        this.rooms[roomIndex].sensors![sensorIndex!].details = [...details];
+        this.roomService.setRooms([...this.rooms]);
+      }
     }
   }
 
+  prepare_chart_data(){
+    if(!this.selectedSensor?.id) return;
+
+    const selectedId = this.selectedSensor.id;
+    const selectedDay = this.selectedDate.toDateString();
+
+    console.log("Fetching data for: ", selectedDay);
+
+    if(this.sensorSub){
+      this.sensorSub.unsubscribe();
+    }
+
+    // Fetch for ngOnInit() //
+    this.sensorService.get_sensor_data_by_date(selectedId, selectedDay).subscribe({
+      next: (details: Details[]) => {
+        this.process_chart_data(details);
+        this.updateSensorDetailsInRooms(selectedId, details);
+        console.log("Details of the selected sensor: ", details);
+      },
+      error: (err) => {
+        console.error("Error fetching data:", err);
+        this.reset_chart();
+      }
+    });
+
+    this.sensorSub = interval(5000).pipe(
+      switchMap(() => this.sensorService.get_sensor_data_by_date(selectedId, selectedDay))).subscribe({
+       next: (details: Details[]) => {
+         this.process_chart_data(details);
+         this.updateSensorDetailsInRooms(selectedId, details);
+         console.log("Details of the selected sensor: ", details);
+       },
+       error: (err) => {
+         console.error("Error fetching data:", err);
+         this.reset_chart();
+       }
+    });
+ }
+
+ process_chart_data(details: Details[]){
+  const validDetails = details
+        .filter(d => d.timestamp && d.data)
+        .sort((a, b) => (a.timestamp!.seconds - b.timestamp!.seconds));
+
+    if (validDetails.length === 0) {
+        this.reset_chart();
+        return;
+    }
+
+    const measurementTypes = Object.keys(validDetails[0].data!);
+
+    this.chartData = {
+        labels: validDetails.map(d => this.format_time(d)),
+        datasets: measurementTypes.map(type => ({
+            label: this.capitalize_first_letter(type),
+            data: validDetails.map(d => d.data![type]),
+            borderColor: this.get_random_color(),
+            backgroundColor: 'rgba(0, 0, 0, 0.1)',
+            tension: 0.4,
+            pointRadius: 5,
+            pointHoverRadius: 8
+        }))
+    };
+ }
+
+ format_time(detail: Details){
+  let date: Date | null = null;
+
+    if (typeof detail.get_timestamp_date === 'function') {
+        date = detail.get_timestamp_date();
+    } else if (detail.timestamp) {
+        date = new Date(detail.timestamp.seconds * 1000);
+    }
+
+    return date ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+ }
+
+ capitalize_first_letter(str: string){
+  return str.charAt(0).toUpperCase() + str.slice(1);
+ }
+
+ reset_chart(){
+  this.hasDataForChart = false;
+  this.chartData = { labels: [], datasets: [] };
+ }
   // END OF LOGIG OF THE CHART //
-
 }
-

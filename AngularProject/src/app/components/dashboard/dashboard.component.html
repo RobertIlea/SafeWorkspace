@@ -1,49 +1,67 @@
 <main class="cards">
     <div class="row">
-      <mat-card class="card small-card" [@cardAnimation]>Card 1</mat-card>
+      <mat-card class="alert-card" [@cardAnimation]>
+        <h2 class="alert-section-title">Active alerts</h2>
+        <app-alert [rooms]="rooms"></app-alert>
+      </mat-card>
       <mat-card class="card small-card" [@cardAnimation]>
 
         <mat-card-content class="sensor-hystory-content">
 
           <div class="form-fields">
             <mat-form-field appearance="outline">
-              <mat-label>Select Room</mat-label>
+              <mat-label>Select room</mat-label>
               <mat-select [(value)]="selectedRoom" (selectionChange)="select_room($event.value)">
                 <mat-option *ngFor="let room of rooms" [value]="room">{{ room.name }}</mat-option>
               </mat-select>
             </mat-form-field>
-        
+
             <mat-form-field appearance="outline" *ngIf="selectedRoom">
-              <mat-label>Select Sensor</mat-label>
+              <mat-label>Select sensor</mat-label>
               <mat-select [(value)]="selectedSensor" (selectionChange)="select_sensor($event.value)">
                 <mat-option *ngFor="let sensor of selectedRoom.sensors" [value]="sensor">{{ sensor.sensorType }}</mat-option>
               </mat-select>
             </mat-form-field>
-        
+
             <mat-form-field appearance="outline" *ngIf="selectedSensor">
+              <mat-label>Select date</mat-label>
               <input matInput [matDatepicker]="picker" placeholder="Choose a date" [(ngModel)]="selectedDate" (dateChange)="selected_date($event.value)">
               <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
               <mat-datepicker #picker></mat-datepicker>
             </mat-form-field>
           </div>
-        
-    
+
+
           <div class="chart-container" *ngIf="selectedSensor">
             <canvas baseChart
               [data]="chartData"
               [options]="chartOptions"
               [type]="'line'">
+              #realTimeChart={{chartData}}
+
             </canvas>
           </div>
         </mat-card-content>
-          
+
       </mat-card>
     </div>
     <mat-card class="card large-card" [@cardAnimation]>
-      <mat-card-title class="list-title">List of your rooms</mat-card-title>
+      <mat-card-title class="list-title">List of my rooms</mat-card-title>
       <div class="rooms-container">
         <div *ngFor="let room of rooms" class="dashboard-card" (click)="open_room_dialog(room)">
-          <p>{{room.name}}</p>
+          <button mat-icon-button class="delete-btn" (click)="confirm_remove(room,$event)">
+            <mat-icon color="warn">close</mat-icon>
+          </button>
+
+          <div class="room-card-header">
+            {{room.name}}
+          </div>
+
+          <div class="room-card-content">
+            <span class="sensor-count">
+              {{ room.sensors?.length || 0 }} sensor{{ room.sensors?.length === 1 ? '' : 's' }}
+            </span>
+          </div>
         </div>
 
         <div class="dashboard-card add-room">
@@ -51,8 +69,8 @@
             <mat-icon>add</mat-icon>
           </button>
         </div>
-  </div>
-  </mat-card>         
+      </div>
+    </mat-card>
 </main>
 
-  
+

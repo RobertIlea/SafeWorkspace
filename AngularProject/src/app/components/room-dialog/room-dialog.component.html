@@ -7,11 +7,14 @@
         <mat-card-title>{{ sensor.sensorType }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        <div *ngFor="let detail of sensor.details">
-          <p><b>{{ detail.timestamp?.seconds ? (detail.timestamp.seconds * 1000 | date:'medium') : '' }}</b></p>
+        <div *ngIf="getLastDetail(sensor) as detail">
+          <p><b>{{ detail.timestamp!.seconds ? (detail.timestamp!.seconds * 1000 | date:'medium') : '' }}</b></p>
           <div *ngFor="let data of (detail.data | keyvalue)">
-            <p>
+            <p *ngIf="data.key === 'temperature' || data.key === 'humidity'">
               {{ data.key }}: {{ data.value }}{{ data.key === 'temperature' ? '°C' : (data.key === 'humidity' ? '%' : '') }}
+            </p>
+            <p *ngIf="data.key === 'gas'">
+              Gas level: {{ data.value }} – {{ getGasLevelMessage(data.value) }}
             </p>
           </div>
         </div>

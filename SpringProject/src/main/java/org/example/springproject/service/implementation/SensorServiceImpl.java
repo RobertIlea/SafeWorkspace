@@ -1,6 +1,7 @@
 package org.example.springproject.service.implementation;
 
 import com.google.api.core.ApiFuture;
+import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.*;
 import org.example.springproject.dto.SensorDTO;
 import org.example.springproject.entity.Details;
@@ -20,6 +21,8 @@ public class SensorServiceImpl implements SensorService {
 
     @Autowired
     private Firestore firestore;
+//    @Autowired
+//    private SensorDataWebSocketHandler sensorDataWebSocketHandler;
     private static final String SENSOR_COLLECTION = "sensors";
 
 
@@ -136,6 +139,7 @@ public class SensorServiceImpl implements SensorService {
         );
 
         WriteResult result = docRef.set(updatedSensor).get();
+//        sensorDataWebSocketHandler.broadcast(updatedSensor);
         return result.getUpdateTime().toString();
     }
 
@@ -156,7 +160,11 @@ public class SensorServiceImpl implements SensorService {
             }
 
             Sensor sensor = deserializeSensor(document);
-            return new SensorDTO(sensorId, Objects.requireNonNull(sensor).getSensorType(), sensor.getPort(), sensor.getDetails());
+            System.out.println("Sensor after deserialization: " + sensor.toString());
+            if (sensor == null) {
+                throw new RuntimeException("Deserialization failed: sensor is null");
+            }
+            return new SensorDTO(sensorId, sensor.getSensorType(), sensor.getPort(), sensor.getDetails());
         } catch (ExecutionException | InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -166,7 +174,8 @@ public class SensorServiceImpl implements SensorService {
         if (detailsList != null) {
             try {
                 for (Map<String, Object> detailMap : detailsList) {
-                    com.google.cloud.Timestamp timestampObj = (com.google.cloud.Timestamp) detailMap.get("timestamp");
+//                    System.out.println("Details: " + detailMap);
+                    Timestamp timestampObj = (Timestamp) detailMap.get("timestamp");
                     Map<String, Float> data = deserializeDetailsList(detailMap);
                     details.add(new Details(timestampObj, data));
                 }
@@ -190,4 +199,64 @@ public class SensorServiceImpl implements SensorService {
         return data;
     }
 
+    @Override
+    public List<Details> getSensorDataByDate(String sensorId, Date selectedDate) throws ExecutionException, InterruptedException {
+        try{
+            DocumentReference docRef = firestore.collection(SENSOR_COLLECTION).document(sensorId);
+            DocumentSnapshot snapshot = docRef.get().get();
+
+            if (!snapshot.exists()) {
+                throw new RuntimeException("Sensor with id: " + sensorId + "doesn't exist!");
+            }
+
+            SensorDTO sensorDTO = snapshot.toObject(SensorDTO.class);
+
+            if (sensorDTO == null || sensorDTO.getDetails() == null) {
+                return new ArrayList<>();
+            }
+
+            Calendar calSelected = Calendar.getInstance();
+            calSelected.setTime(selectedDate);
+
+            Calendar calDetail = Calendar.getInstance();
+            System.out.println("Sensor data for date: " + selectedDate + " fetched successfully.");
+            System.out.println("Calendar selected: " + calSelected.getTime());
+            return sensorDTO.getDetails().stream()
+                    .filter(detail -> {
+                        if(detail.getTimestamp() == null) {
+                            return false;
+                        }
+                        calDetail.setTimeInMillis(detail.getTimestamp().getSeconds() * 1000);
+                        return calSelected.get(Calendar.YEAR) == calDetail.get(Calendar.YEAR) &&
+                               calSelected.get(Calendar.MONTH) == calDetail.get(Calendar.MONTH) &&
+                               calSelected.get(Calendar.DAY_OF_MONTH) == calDetail.get(Calendar.DAY_OF_MONTH);
+                    })
+                    .collect(Collectors.toList());
+        }catch (Exception e) {
+            throw new RuntimeException("Failed to fetch sensor data for date: " + selectedDate, e);
+        }
+    }
+
+    @Override
+    public List<SensorDTO> getAllSensorsWithLastDetail(){
+        try{
+            List<SensorDTO> sensorDTOList = new ArrayList<>();
+            ApiFuture<QuerySnapshot> future = firestore.collection(SENSOR_COLLECTION).get();
+            List<QueryDocumentSnapshot> docs = future.get().getDocuments();
+
+            for(QueryDocumentSnapshot doc : docs){
+                Sensor sensor = deserializeSensor(doc);
+                String id = doc.getId();
+                SensorDTO sensorDTO = new SensorDTO(id, sensor.getSensorType(), sensor.getPort(), sensor.getDetails());
+                if(sensorDTO.getDetails() != null && !sensorDTO.getDetails().isEmpty()){
+                    Details lastDetail = sensorDTO.getDetails().get(sensorDTO.getDetails().size() - 1);
+                    sensorDTO.setDetails(Collections.singletonList(lastDetail));
+                }
+                sensorDTOList.add(sensorDTO);
+            }
+            return sensorDTOList;
+        } catch (ExecutionException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
