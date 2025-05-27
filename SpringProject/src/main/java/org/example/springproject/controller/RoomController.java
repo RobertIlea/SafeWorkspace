@@ -28,8 +28,6 @@ public class RoomController {
     private RoomService roomService;
     @Autowired
     private JwtService jwtService;
-    @Autowired
-    private UserService userService;
 
     @GetMapping("/")
     public ResponseEntity<List<RoomDTO>> getRooms(@RequestHeader("Authorization") String token) {

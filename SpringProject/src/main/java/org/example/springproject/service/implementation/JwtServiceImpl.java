@@ -50,6 +50,7 @@ public class JwtServiceImpl implements JwtService {
             throw new JwtException("Invalid JWT token", e);
         }
     }
+
     @Override
     public boolean validateToken(String token) {
         try {

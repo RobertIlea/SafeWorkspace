@@ -25,10 +25,6 @@ public class RoomServiceImpl implements RoomService {
 
     @Autowired
     private Firestore firestore;
-    @Autowired
-    private JwtService jwtService;
-//    @Autowired
-//    private RoomSensorDataWebSocketHandler roomSensorDataWebSocketHandler;
     private static final String ROOM_COLLECTION = "rooms";
     private static final String USER_COLLECTION = "users";
     private static final String SENSOR_COLLECTION = "sensors";
@@ -54,7 +50,6 @@ public class RoomServiceImpl implements RoomService {
     @Override
     public RoomDTO addRoom(Room room) throws RuntimeException {
         try{
-            // Add a new room to Firestore with or without userId
             DocumentReference roomRef = firestore.collection(ROOM_COLLECTION).document();
             DocumentSnapshot roomSnapshot = roomRef.get().get();
             if(roomSnapshot.exists()){
@@ -386,8 +381,8 @@ public class RoomServiceImpl implements RoomService {
             if(!userId.equals(room.getUserId())){
                 throw new RuntimeException("User does not own this room!");
             }
-            room.setUserId("");
-            roomRef.set(room).get();
+
+            roomRef.update("userId", "").get();
 
             @SuppressWarnings("unchecked")
             List<Map<String,Object>> sensorsData = (List<Map<String, Object>>) snapshot.get("sensors");

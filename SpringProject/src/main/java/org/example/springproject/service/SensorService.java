@@ -25,5 +25,5 @@ public interface SensorService {
 
     List<Details> getSensorDataByDate(String sensorId, Date selectedDate) throws ExecutionException, InterruptedException;
 
-    List<SensorDTO> getAllSensorsWithLastDetail();
+    Details getLastDetailForSensor(String sensorId);
 }

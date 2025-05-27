@@ -19,4 +19,6 @@ public interface UserService {
     User getUserByEmail(String email);
 
     String getUserIdByEmail(String email);
+
+    UserDTO getUserByRoomId(String roomId);
 }

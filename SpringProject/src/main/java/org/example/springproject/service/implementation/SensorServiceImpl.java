@@ -21,8 +21,6 @@ public class SensorServiceImpl implements SensorService {
 
     @Autowired
     private Firestore firestore;
-//    @Autowired
-//    private SensorDataWebSocketHandler sensorDataWebSocketHandler;
     private static final String SENSOR_COLLECTION = "sensors";
 
 
@@ -73,7 +71,6 @@ public class SensorServiceImpl implements SensorService {
         return new Sensor(sensorType, port, details);
     }
 
-
     @Override
     public SensorDTO updateSensor(String id, Sensor updatedSensor){
         try{
@@ -93,6 +90,7 @@ public class SensorServiceImpl implements SensorService {
             throw new RuntimeException("Error while updating the sensor: " + e.getMessage(), e);
         }
     }
+
     @Override
     public List<SensorDTO> getSensors(){
         try{
@@ -160,7 +158,6 @@ public class SensorServiceImpl implements SensorService {
             }
 
             Sensor sensor = deserializeSensor(document);
-            System.out.println("Sensor after deserialization: " + sensor.toString());
             if (sensor == null) {
                 throw new RuntimeException("Deserialization failed: sensor is null");
             }
@@ -174,7 +171,6 @@ public class SensorServiceImpl implements SensorService {
         if (detailsList != null) {
             try {
                 for (Map<String, Object> detailMap : detailsList) {
-//                    System.out.println("Details: " + detailMap);
                     Timestamp timestampObj = (Timestamp) detailMap.get("timestamp");
                     Map<String, Float> data = deserializeDetailsList(detailMap);
                     details.add(new Details(timestampObj, data));
@@ -219,8 +215,8 @@ public class SensorServiceImpl implements SensorService {
             calSelected.setTime(selectedDate);
 
             Calendar calDetail = Calendar.getInstance();
-            System.out.println("Sensor data for date: " + selectedDate + " fetched successfully.");
-            System.out.println("Calendar selected: " + calSelected.getTime());
+//            System.out.println("Sensor data for date: " + selectedDate + " fetched successfully.");
+//            System.out.println("Calendar selected: " + calSelected.getTime());
             return sensorDTO.getDetails().stream()
                     .filter(detail -> {
                         if(detail.getTimestamp() == null) {
@@ -238,23 +234,27 @@ public class SensorServiceImpl implements SensorService {
     }
 
     @Override
-    public List<SensorDTO> getAllSensorsWithLastDetail(){
+    public Details getLastDetailForSensor(String sensorId){
         try{
-            List<SensorDTO> sensorDTOList = new ArrayList<>();
-            ApiFuture<QuerySnapshot> future = firestore.collection(SENSOR_COLLECTION).get();
-            List<QueryDocumentSnapshot> docs = future.get().getDocuments();
+            DocumentReference docRef = firestore.collection(SENSOR_COLLECTION).document(sensorId);
+            DocumentSnapshot snapshot = docRef.get().get();
 
-            for(QueryDocumentSnapshot doc : docs){
-                Sensor sensor = deserializeSensor(doc);
-                String id = doc.getId();
-                SensorDTO sensorDTO = new SensorDTO(id, sensor.getSensorType(), sensor.getPort(), sensor.getDetails());
-                if(sensorDTO.getDetails() != null && !sensorDTO.getDetails().isEmpty()){
-                    Details lastDetail = sensorDTO.getDetails().get(sensorDTO.getDetails().size() - 1);
-                    sensorDTO.setDetails(Collections.singletonList(lastDetail));
-                }
-                sensorDTOList.add(sensorDTO);
+            if (!snapshot.exists()) {
+                throw new RuntimeException("Sensor with id: " + sensorId + " doesn't exist!");
             }
-            return sensorDTOList;
+
+            SensorDTO sensorDTO = snapshot.toObject(SensorDTO.class);
+
+            if (sensorDTO == null || sensorDTO.getDetails() == null || sensorDTO.getDetails().isEmpty()) {
+                System.out.println("No details found for sensor with id: " + sensorId);
+                return null;
+            }
+
+            return sensorDTO.getDetails().stream()
+                    .filter(d -> d.getTimestamp() != null)
+                    .max(Comparator.comparing(d -> d.getTimestamp().getSeconds()))
+                    .orElse(null);
+
         } catch (ExecutionException | InterruptedException e) {
             throw new RuntimeException(e);
         }

@@ -24,8 +24,7 @@ public class AlertServiceImpl implements AlertService {
         try{
             DocumentReference alertRef = firestore.collection(ALERT_COLLECTION).document();
             alertRef.set(alert).get();
-            AlertDTO alertDTO = new AlertDTO(alertRef.getId(),alert.getRoomId(),alert.getSensorId(),alert.getTimestamp(),alert.getSensorType(), alert.getData(),alert.getMessage());
-            return alertDTO;
+            return new AlertDTO(alertRef.getId(),alert.getRoomId(),alert.getSensorId(),alert.getTimestamp(),alert.getSensorType(), alert.getData(),alert.getMessage());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

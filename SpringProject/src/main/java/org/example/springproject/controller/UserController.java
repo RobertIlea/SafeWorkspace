@@ -37,6 +37,7 @@ public class UserController {
             return new ResponseEntity<>(errorList, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable String id){
         try{
@@ -50,6 +51,7 @@ public class UserController {
             return new ResponseEntity<>(errorDTO, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
     @PostMapping("/")
     public ResponseEntity<UserDTO> addUser(@RequestBody User user) {
         try{
@@ -64,6 +66,7 @@ public class UserController {
         }
 
     }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<UserDTO> deleteUserById(@PathVariable String id) {
         try {
@@ -77,6 +80,7 @@ public class UserController {
             return new ResponseEntity<>(errorDTO, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
     @PutMapping("/{id}")
     public ResponseEntity<UserDTO> updateUser(@PathVariable String id, @RequestBody User user){
         try{
@@ -90,6 +94,7 @@ public class UserController {
             return new ResponseEntity<>(errorDTO, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
     @GetMapping("/email/{email}")
     public ResponseEntity<String> getUserIdByEmail(@PathVariable String email){
         try {
