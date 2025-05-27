@@ -29,6 +29,7 @@ public class AlertController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
     @GetMapping("/{roomId}")
     public ResponseEntity<List<AlertDTO>> getAlerts(@PathVariable("roomId") String roomId) {
         try {
@@ -42,6 +43,7 @@ public class AlertController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
     @GetMapping("/{roomId}/data/{date}")
     public ResponseEntity<List<AlertDTO>> getAlertsByRoomAndDate(@PathVariable("roomId") String roomId, @PathVariable("date") String date){
         try{

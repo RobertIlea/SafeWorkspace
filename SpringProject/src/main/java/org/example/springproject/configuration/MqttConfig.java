@@ -1,17 +1,17 @@
 package org.example.springproject.configuration;
 
-import com.google.cloud.Timestamp;
 import com.google.gson.Gson;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.example.springproject.dto.SensorDTO;
-import org.example.springproject.entity.Alert;
-import org.example.springproject.entity.Details;
-import org.example.springproject.service.AlertService;
-import org.example.springproject.service.RoomService;
-import org.example.springproject.service.SensorService;
+import org.example.springproject.dto.UserDTO;
+import org.example.springproject.entity.*;
+import org.example.springproject.service.*;
+import org.example.springproject.util.AlertManager;
+import org.example.springproject.util.SensorMapper;
+import org.example.springproject.util.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,15 +34,23 @@ public class MqttConfig {
     private final String brokerUrl = "tcp://broker.emqx.io:1883";
     private final String topicDht22= "sensor/dht22/data";
     private final String topicMq5 = "sensor/mq5/data";
+    private final String topicEsp32x1 = "sensor/esp32x1/data";
+
     @Autowired
     private final SensorService sensorService;
     private final RoomService roomService;
     private final AlertService alertService;
+    private final CustomAlertService customAlertService;
+    private final AlertManager alertManager;
+    private final UserService userService;
 
-    public MqttConfig(SensorService sensorService, RoomService roomService, AlertService alertService) {
+    public MqttConfig(SensorService sensorService, RoomService roomService, AlertService alertService, CustomAlertService customAlertService, AlertManager alertManager, UserService userService) {
         this.sensorService = sensorService;
         this.roomService = roomService;
         this.alertService = alertService;
+        this.customAlertService = customAlertService;
+        this.alertManager = alertManager;
+        this.userService = userService;
     }
 
     @Bean
@@ -79,7 +87,7 @@ public class MqttConfig {
     @Bean
     public MqttPahoMessageDrivenChannelAdapter inbound() {
         MqttPahoMessageDrivenChannelAdapter adapter =
-                new MqttPahoMessageDrivenChannelAdapter(brokerUrl, "testClient", topicDht22, topicMq5);
+                new MqttPahoMessageDrivenChannelAdapter(brokerUrl, "testClient", topicDht22, topicMq5,topicEsp32x1);
         adapter.setCompletionTimeout(8000);
         adapter.setConverter(new DefaultPahoMessageConverter());
         adapter.setQos(0);
@@ -89,23 +97,29 @@ public class MqttConfig {
 
     private void alertDHT22(String roomId, SensorDTO sensorDTO) {
         List<Details> detailsList = sensorDTO.getDetails();
+        UserDTO userDTO = userService.getUserByRoomId(roomId);
+        User userFromDTO = UserMapper.toEntity(userDTO);
+        Sensor sensorFromDTO = SensorMapper.toEntity(sensorDTO);
+
         for(Details details : detailsList) {
             Map<String, Float> data = details.getData();
             if (data.containsKey("temperature")) {
                 float temperature = data.get("temperature");
-                if (temperature > 30) {
+                if (temperature > 40) {
                     System.out.println("@@@@@@@@@@@@@ ALERT @@@@@@@@@@@@@");
                     System.out.println("Temperature is too high: " + temperature + "°C");
-                    Alert alert = new Alert(roomId,sensorDTO.getId(),details.getTimestamp(),sensorDTO.getSensorType(),data,"temperature is too high: " + temperature + " °C");
+                    Alert alert = new Alert(roomId,sensorDTO.getId(),details.getTimestamp(),sensorDTO.getSensorType(),data,"Temperature is too high: " + temperature + " °C");
                     alertService.saveAlert(alert);
+                    alertManager.sendEmail(userFromDTO,alert,sensorFromDTO);
                     System.out.println("Alert saved");
                     System.out.println("@@@@@@@@@@@@@ END OF THE ALERT @@@@@@@@@@@@@");
                 }
-                if (temperature < 10) {
+                if (temperature < 0) {
                     System.out.println("@@@@@@@@@@@@@ ALERT @@@@@@@@@@@@@");
                     System.out.println("Temperature is too low: " + temperature + "°C");
-                    Alert alert = new Alert(roomId,sensorDTO.getId(),details.getTimestamp(),sensorDTO.getSensorType(),data,"temperature is too low: " + temperature + " °C");
+                    Alert alert = new Alert(roomId,sensorDTO.getId(),details.getTimestamp(),sensorDTO.getSensorType(),data,"Temperature is too low: " + temperature + " °C");
                     alertService.saveAlert(alert);
+                    alertManager.sendEmail(userFromDTO,alert,sensorFromDTO);
                     System.out.println("Alert saved");
                     System.out.println("@@@@@@@@@@@@@ END OF THE ALERT @@@@@@@@@@@@@");
                 }
@@ -115,16 +129,18 @@ public class MqttConfig {
                 if (humidity > 75) {
                     System.out.println("@@@@@@@@@@@@@ ALERT @@@@@@@@@@@@@");
                     System.out.println("Humidity is too high: " + humidity + "%");
-                    Alert alert = new Alert(roomId,sensorDTO.getId(),details.getTimestamp(),sensorDTO.getSensorType(),data,"humidity is too high: " + humidity + " %");
+                    Alert alert = new Alert(roomId,sensorDTO.getId(),details.getTimestamp(),sensorDTO.getSensorType(),data,"Humidity is too high: " + humidity + " %");
                     alertService.saveAlert(alert);
+                    alertManager.sendEmail(userFromDTO,alert,sensorFromDTO);
                     System.out.println("Alert saved");
                     System.out.println("@@@@@@@@@@@@@ END OF THE ALERT @@@@@@@@@@@@@");
                 }
                 if (humidity < 30) {
                     System.out.println("@@@@@@@@@@@@@ ALERT @@@@@@@@@@@@@");
                     System.out.println("Humidity is too low: " + humidity + "%");
-                    Alert alert = new Alert(roomId,sensorDTO.getId(),details.getTimestamp(),sensorDTO.getSensorType(),data,"humidity is too low: " + humidity + " %");
+                    Alert alert = new Alert(roomId,sensorDTO.getId(),details.getTimestamp(),sensorDTO.getSensorType(),data,"Humidity is too low: " + humidity + " %");
                     alertService.saveAlert(alert);
+                    alertManager.sendEmail(userFromDTO,alert,sensorFromDTO);
                     System.out.println("Alert saved");
                     System.out.println("@@@@@@@@@@@@@ END OF THE ALERT @@@@@@@@@@@@@");
                 }
@@ -134,21 +150,87 @@ public class MqttConfig {
 
     private void alertMq5(String roomId, SensorDTO sensorDTO) {
         List<Details> detailsList = sensorDTO.getDetails();
+        UserDTO userDTO = userService.getUserByRoomId(roomId);
+        User userFromDTO = UserMapper.toEntity(userDTO);
+        Sensor sensorFromDTO = SensorMapper.toEntity(sensorDTO);
+
         for(Details details : detailsList) {
             Map<String, Float> data = details.getData();
-            if (data.containsKey("gasLevel")) {
-                float gasLevel = data.get("gasLevel");
+            if (data.containsKey("gas")) {
+                float gasLevel = data.get("gas");
 
                 if (gasLevel > 700) {
                     System.out.println("@@@@@@@@@@@@@ ALERT @@@@@@@@@@@@@");
                     System.out.println("Gas level is too high: " + gasLevel);
                     Alert alert = new Alert(roomId,sensorDTO.getId(),details.getTimestamp(),sensorDTO.getSensorType(),data,"Gas level is too high: " + gasLevel);
                     alertService.saveAlert(alert);
+                    alertManager.sendEmail(userFromDTO,alert,sensorFromDTO);
                     System.out.println("Alert saved");
                     System.out.println("@@@@@@@@@@@@@ END OF THE ALERT @@@@@@@@@@@@@");
                 }
             }
         }
+    }
+
+    private void alertMq2(String roomId, SensorDTO sensorDTO) {
+        List<Details> detailsList = sensorDTO.getDetails();
+        UserDTO userDTO = userService.getUserByRoomId(roomId);
+        User userFromDTO = UserMapper.toEntity(userDTO);
+        Sensor sensorFromDTO = SensorMapper.toEntity(sensorDTO);
+
+        for(Details details : detailsList) {
+            Map<String, Float> data = details.getData();
+            if (data.containsKey("gas")) {
+                float gasLevel = data.get("gas");
+
+                if(gasLevel > 1000){
+                    System.out.println("@@@@@@@@@@@@@ ALERT @@@@@@@@@@@@@");
+                    System.out.println("Gas level is too high: " + gasLevel);
+                    Alert alert = new Alert(roomId,sensorDTO.getId(),details.getTimestamp(),sensorDTO.getSensorType(),data,"Smoke or gas level is too high: " + gasLevel);
+                    alertService.saveAlert(alert);
+                    alertManager.sendEmail(userFromDTO,alert,sensorFromDTO);
+                    System.out.println("Alert saved");
+                    System.out.println("@@@@@@@@@@@@@ END OF THE ALERT @@@@@@@@@@@@@");
+                }
+
+            }
+        }
+    }
+
+    private void checkCustomAlerts(String roomId, SensorDTO sensorDTO) {
+        List<CustomAlert> customAlerts = customAlertService.getAllCustomAlertsBySensorId(sensorDTO.getId());
+        UserDTO userDTO = userService.getUserByRoomId(roomId);
+        User userFromDTO = UserMapper.toEntity(userDTO);
+        Sensor sensorFromDTO = SensorMapper.toEntity(sensorDTO);
+
+        for(Details detail: sensorDTO.getDetails()) {
+            Map<String, Float> data = detail.getData();
+            for (CustomAlert customAlert : customAlerts) {
+                Float value = data.get(customAlert.getParameter());
+                if (value != null) {
+                    if (evaluateCondition(value, customAlert.getCondition(), customAlert.getThreshold())) {
+                        System.out.println("@@@@@@@@@@@@@ ALERT @@@@@@@@@@@@@");
+                        System.out.println("Custom alert triggered: " + customAlert.getMessage());
+                        Alert alert = new Alert(roomId,sensorDTO.getId(),detail.getTimestamp(),sensorDTO.getSensorType(),data,customAlert.getMessage());
+                        alertService.saveAlert(alert);
+                        alertManager.sendEmail(userFromDTO,alert,sensorFromDTO);
+                        System.out.println("Custom alert saved");
+                        System.out.println("@@@@@@@@@@@@@ END OF THE ALERT @@@@@@@@@@@@@");
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean evaluateCondition(float value, String condition, float threshold) {
+        return switch (condition) {
+            case ">" -> value > threshold;
+            case "<" -> value < threshold;
+            case ">=" -> value >= threshold;
+            case "<=" -> value <= threshold;
+            case "==" -> value == threshold;
+            default -> false;
+        };
     }
 
     private void processDataForRoom(SensorDTO sensorDTO, String roomId) {
@@ -161,6 +243,10 @@ public class MqttConfig {
         if(sensorDTO.getSensorType().equals("MQ5")){
             alertMq5(roomId, sensorDTO);
         }
+        if(sensorDTO.getSensorType().equals("MQ2")){
+            alertMq2(roomId, sensorDTO);
+        }
+        checkCustomAlerts(roomId, sensorDTO);
         try{
             sensorService.saveSensorData(sensorDTO);
             roomService.updateRoomWithSensorData(roomId, sensorDTO);
@@ -169,6 +255,7 @@ public class MqttConfig {
             throw new RuntimeException(e);
         }
     }
+
     @Bean
     @ServiceActivator(inputChannel = "mqttInputChannel")
     public MessageHandler handler() {
@@ -180,6 +267,7 @@ public class MqttConfig {
                 String topic = message.getHeaders().get(MqttHeaders.RECEIVED_TOPIC).toString();
 
                 String primaryRoomId = "1RdkB5aniSqVc1GayEVr";
+                String esp32x1RoomId = "9JFObYv8R4mCtkYtac77";
 
                 if (topic.equals(topicDht22)) {
                     System.out.println("Processing DHT22 topic: " + topic);
@@ -220,6 +308,34 @@ public class MqttConfig {
 
                     SensorDTO mq5SensorDTO = new SensorDTO(mq5SensorId,"MQ5",0, List.of(details));
                     processDataForRoom(mq5SensorDTO,primaryRoomId);
+                }
+
+                if(topic.equals(topicEsp32x1)){
+                    System.out.println("Processing Esp32x1 topic: " + topic);
+                    Gson gson = new Gson();
+
+                    @SuppressWarnings("unchecked")
+                    Map<String,Object> data = gson.fromJson(payload,Map.class);
+                    int mq2Value = ((Number) data.get("mq2")).intValue();
+                    int mq5Value = ((Number) data.get("mq5")).intValue();
+                    long timestamp = Long.parseLong((String) data.get("timestamp"));
+                    Map<String,Float> esp32x1Mq2Data = new HashMap<>();
+                    Map<String,Float> esp32x1Mq5Data = new HashMap<>();
+
+                    esp32x1Mq2Data.put("mq2Value", (float) mq2Value);
+                    esp32x1Mq5Data.put("gas", (float) mq5Value);
+                    Details detailsMq2 = new Details(timestamp,esp32x1Mq2Data);
+                    Details detailsMq5 = new Details(timestamp,esp32x1Mq5Data);
+
+                    String esp32x1Mq2SensorId = "EblfbGBn7wrJi9Zqtb0S";
+                    String esp32x1Mq5SensorId = "ok7tYDjTHI5OLUUcRm8q";
+
+                    SensorDTO esp32x1Mq2SensorDTO = new SensorDTO(esp32x1Mq2SensorId,"MQ2",36,List.of(detailsMq2));
+                    SensorDTO esp32x1Mq5SensorDTO = new SensorDTO(esp32x1Mq5SensorId,"MQ5",39,List.of(detailsMq5));
+
+                    processDataForRoom(esp32x1Mq2SensorDTO,esp32x1RoomId);
+                    processDataForRoom(esp32x1Mq5SensorDTO,esp32x1RoomId);
+
                 }
 
             }

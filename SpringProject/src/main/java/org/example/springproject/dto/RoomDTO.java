@@ -35,6 +35,7 @@ public class RoomDTO {
     public void setSensors(List<SensorDTO> sensors) {
         this.sensors = sensors;
     }
+
     public String getName() {
         return name;
     }
@@ -42,6 +43,7 @@ public class RoomDTO {
     public void setName(String name) {
         this.name = name;
     }
+
     public String getUserId() {
         return userId;
     }
@@ -49,6 +51,7 @@ public class RoomDTO {
     public void setUserId(String userId) {
         this.userId = userId;
     }
+
     @Override
     public String toString(){
         return "room id: " + id + " Senzori: " + sensors.toString() + " nume camera: " + name + " user id: " + userId;

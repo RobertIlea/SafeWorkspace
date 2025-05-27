@@ -41,6 +41,7 @@ public class AuthController {
     public ResponseEntity<String> getLoginPage() {
         return ResponseEntity.ok("Login page");
     }
+
     @PostMapping("/")
     public ResponseEntity<?> login(@RequestBody Map<String,Object> request) {
         System.out.println("Login request received");

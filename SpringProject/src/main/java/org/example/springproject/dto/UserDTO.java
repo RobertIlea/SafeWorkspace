@@ -37,6 +37,7 @@ public class UserDTO {
     public void setEmail(String email) {
         this.email = email;
     }
+
     @Override
     public String toString() {
         return String.format("{\"name\":\"%s\",\"email\":\"%s\"}", name, email);

@@ -1,0 +1,36 @@
+<h2 mat-dialog-title>Edit Custom Alert</h2>
+
+<mat-dialog-content [formGroup]="form">
+  <mat-form-field appearance="outline" class="custom-field">
+    <mat-label>Parameter</mat-label>
+    <mat-select formControlName="parameter">
+      <mat-option *ngFor="let param of availableParams" [value]="param">{{ param | titlecase }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="custom-field">
+    <mat-label>Condition</mat-label>
+    <mat-select formControlName="condition">
+      <mat-option value=">">></mat-option>
+      <mat-option value="<"><</mat-option>
+      <mat-option value=">=">>=</mat-option>
+      <mat-option value="<="><=</mat-option>
+      <mat-option value="==">==</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="custom-field">
+    <mat-label>Threshold</mat-label>
+    <input matInput type="number" formControlName="threshold" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="custom-field">
+    <mat-label>Message</mat-label>
+    <textarea matInput formControlName="message"></textarea>
+  </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-flat-button color="primary" (click)="submit()" [disabled]="form.invalid">Save</button>
+</mat-dialog-actions>

@@ -39,4 +39,13 @@ public class Sensor {
     public void setDetails(List<Details> details) {
         this.details = details;
     }
+
+    @Override
+    public String toString() {
+        return "Sensor{" +
+                "sensorType='" + sensorType + '\'' +
+                ", port=" + port +
+                ", details=" + details +
+                '}';
+    }
 }

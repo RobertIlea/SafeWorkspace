@@ -3,66 +3,69 @@
     max-height: 500px;
     overflow-y: auto;
   }
-  
+
   .alert-item {
-    background: #f5f5f5;
-    margin-bottom: 15px;
-    padding: 15px;
-    border-radius: 8px;
-    border-left: 5px solid #4A4947;
-    transition: all 0.3s ease;
+    background: #ffffff;
+    margin-bottom: 16px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    border-left: 5px solid #ff9800;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.25s ease;
   }
-  
+
   .alert-item:hover {
-    background: #ebebeb;
-    transform: scale(1.01);
+    background: #fafafa;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
-  
+
   .alert-header {
     display: flex;
-    justify-content: space-between;
-    font-weight: bold;
-    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: #333333;
+    margin-bottom: 16px;
   }
-  
+
   .alert-message {
     color: #333;
     margin-bottom: 5px;
   }
-  
+
   .alert-time {
     font-size: 12px;
-    color: #777;
+    color: #999;
     text-align: right;
+    margin-top: 16px;
   }
   .alert-data-badges {
     display: flex;
     gap: 10px;
     margin-bottom: 10px;
   }
-  
+
   .badge {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 6px;
     padding: 6px 12px;
-    border-radius: 20px;
-    color: white;
-    font-size: 14px;
-    font-weight: bold;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #fff;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.3s ease;
   }
   .badge-high {
-    background-color: #e53935; 
+    background-color: #d32f2f;
   }
-  
-  .badge-low {
-    background-color: #1e88e5; 
-  }
-  
-  .badge-normal {
-    background-color: #43a047; 
-  }
-  
+
   .badge-icon {
     font-size: 18px;
+    margin-right: 8px;
   }

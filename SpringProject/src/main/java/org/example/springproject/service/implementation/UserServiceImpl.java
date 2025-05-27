@@ -23,16 +23,19 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private Firestore firestore;
     private final PasswordEncoder passwordEncoder;
+    private static final String ROOM_COLLECTION = "rooms";
     private static final String USER_COLLECTION = "users";
 
     public UserServiceImpl() {
         this.passwordEncoder = new BCryptPasswordEncoder();
     }
+
     private boolean isEmailValid(String email){
         String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
         Pattern pattern = Pattern.compile(emailRegex);
         return pattern.matcher(email).matches();
     }
+
     private void userVerification(User user) {
         if(!isEmailValid(user.getEmail())){
             throw new RuntimeException("Invalid email format!");
@@ -44,6 +47,7 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Length of the password must be greater than 8 characters");
         }
     }
+
     @Override
     public UserDTO addUser(User user) throws RuntimeException {
         try{
@@ -69,6 +73,7 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Error while adding a new user: " + e.getMessage(), e);
         }
     }
+
     @Override
     public UserDTO deleteUserbyId(String id) throws RuntimeException{
         try{
@@ -145,6 +150,7 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Error while fetching the users: " + e.getMessage(), e);
         }
     }
+
     @Override
     public UserDTO getUserById(String id){
         try{
@@ -163,6 +169,7 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException(e);
         }
     }
+
     @Override
     public User getUserByEmail(String email){
         System.out.println(email);
@@ -197,6 +204,39 @@ public class UserServiceImpl implements UserService {
 
             QueryDocumentSnapshot document = querySnapshot.getDocuments().get(0);
             return document.getId();
+        } catch (ExecutionException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public UserDTO getUserByRoomId(String roomId){
+        try{
+            DocumentSnapshot roomSnapshot = firestore.collection(ROOM_COLLECTION).document(roomId).get().get();
+
+            if(!roomSnapshot.exists()){
+                throw new RuntimeException("Room with id: " + roomId + " doesn't exist in database!");
+            }
+
+            String userId = roomSnapshot.getString("userId");
+
+            if(userId == null){
+                throw new RuntimeException("Error while getting user id from room id: " + roomId);
+            }
+
+            DocumentSnapshot userSnapshot = firestore.collection(USER_COLLECTION).document(userId).get().get();
+
+            if(!userSnapshot.exists()){
+                throw new RuntimeException("User with id: " + userId + " doesn't exist in database!");
+            }
+
+            User user = userSnapshot.toObject(User.class);
+
+            if(user == null){
+                throw new RuntimeException("Error while getting user from room id: " + roomId);
+            }
+
+            return new UserDTO(roomId,user.getName(),user.getEmail());
         } catch (ExecutionException | InterruptedException e) {
             throw new RuntimeException(e);
         }
