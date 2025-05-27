@@ -8,19 +8,33 @@
             {{ alert.sensorType }} - {{ alert.message }}
           </div>
 
-        <!-- For DHT22 SENSOR -->
+        <!-- SYSTEM DEFAULT ALARMS -->
           <div class="alert-data-badges">
-            <ng-container *ngIf="alert.data?.['temperature'] !== undefined">
-                <span class="badge" [ngClass]="get_badge_class(alert.data?.['temperature'] ?? 0, 'temperature')">
-                    <mat-icon class="badge-icon">device_thermostat</mat-icon>
-                    {{ alert.data?.['temperature'] }} °C
+            <ng-container *ngIf="alert.data">
+              <ng-container *ngIf="alert.data['temperature'] !== undefined">
+                <span class="badge" [ngClass]="get_badge_class('temperature')">
+                      <mat-icon class="badge-icon">device_thermostat</mat-icon>
+                      {{ alert.data['temperature'] }} °C
                 </span>
-            </ng-container>
-            <ng-container *ngIf="alert.data?.['humidity'] !== undefined">
-                <span class="badge" [ngClass]="get_badge_class(alert.data?.['humidity'] ?? 0, 'humidity')">
+              </ng-container>
+              <ng-container *ngIf="alert.data['humidity'] !== undefined">
+                <span class="badge" [ngClass]="get_badge_class('humidity')">
                     <mat-icon class="badge-icon">water_drop</mat-icon>
-                    {{ alert.data?.['humidity'] }} %
+                    {{ alert.data['humidity'] }} %
                 </span>
+              </ng-container>
+              <ng-container *ngIf="alert.data['gas'] !== undefined">
+                <span class="badge" [ngClass]="get_badge_class('gas')">
+                        <mat-icon class="badge-icon">cloud</mat-icon>
+                  {{ alert.data['gas'] }} ppm
+                </span>
+              </ng-container>
+              <ng-container *ngIf="alert.data['mq2Value'] !== undefined">
+                <span class="badge" [ngClass]="get_badge_class('mq2Value')">
+                        <mat-icon class="badge-icon">cloud</mat-icon>
+                  {{ alert.data['mq2Value'] }} ppm
+                </span>
+              </ng-container>
             </ng-container>
           </div>
         <!--  -->

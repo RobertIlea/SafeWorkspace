@@ -1,0 +1,40 @@
+table {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.no-alerts {
+  margin-top: 20px;
+  text-align: center;
+  color: #888;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.no-alerts mat-icon {
+  font-size: 20px;
+  color: #888;
+}
+
+mat-form-field {
+  min-width: 200px;
+  margin-bottom: 16px;
+  margin-right: 12px;
+}
+
+.mat-column-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.mat-header-cell, .mat-cell {
+  text-align: center;
+}
+.mat-elevation-z2 {
+  border-radius: 8px;
+  overflow: hidden;
+}

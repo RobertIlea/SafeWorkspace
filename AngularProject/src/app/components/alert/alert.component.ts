@@ -24,7 +24,7 @@ export class AlertComponent implements OnInit,OnDestroy,OnChanges {
   @Input() rooms: Room[] = [];
   cameraAlerts: CameraAlert[] = [];
   selectedDate: Date = new Date();
-  alertSub: Subscription | null = null;
+  alertSubs: { [roomId: string]: Subscription } = {};
 
   constructor(
     private alertService: AlertService,
@@ -32,7 +32,7 @@ export class AlertComponent implements OnInit,OnDestroy,OnChanges {
   ) {}
 
   ngOnDestroy(): void {
-    this.alertSub?.unsubscribe();
+    Object.values(this.alertSubs).forEach(sub => sub.unsubscribe());
   }
 
   ngOnInit():void{
@@ -42,76 +42,72 @@ export class AlertComponent implements OnInit,OnDestroy,OnChanges {
       this.loadAlerts();
     }
   }
+  trackByRoomId(index: number, item: CameraAlert): string {
+    return item.roomId;
+  }
+
   loadAlerts() {
-    this.cameraAlerts = [];
     const formattedDate = this.selectedDate.toDateString();
 
     for (const room of this.rooms) {
       const roomId = room.id;
-      if (roomId) {
-        this.alertService.get_alerts_by_room_id_on_a_selected_date(roomId,formattedDate).subscribe({
-          next: (alerts: Alert[]) => {
-            if(alerts.length === 0) {
-              console.log("No alerts found for date: ", formattedDate);
-              return;
-            }
-            const index = this.cameraAlerts.findIndex(c => c.roomId === roomId);
-            if (index !== -1) {
-              const previousLength = this.cameraAlerts[index].alerts.length;
-              this.cameraAlerts[index].alerts = alerts;
-              if(alerts.length > previousLength){
-                this.cameraAlerts[index].hasNewAlert = true;
-              }
-            }else {
-              this.cameraAlerts.push({
-                roomId: room.id!,
-                roomName: room.name!,
-                alerts: alerts,
-                hasNewAlert: false
-              });
-            }
-            console.log("Alerts for the selected date: ", alerts)
-          },
-          error: (err) => {
-            console.log('Failed to load alerts', err);
-          }
-        });
+      if (!roomId) continue;
 
-        if(this.alertSub) {
-          this.alertSub.unsubscribe();
-        }
-
-        this.alertSub = interval(5000).pipe(
-          switchMap(() => this.alertService.get_alerts_by_room_id_on_a_selected_date(roomId,formattedDate))).subscribe({
-            next: (alerts: Alert[]) => {
-              if(alerts.length === 0) {
-                return;
-              }
-              const index = this.cameraAlerts.findIndex(c => c.roomId === roomId);
-              if (index !== -1) {
-                const previousLength = this.cameraAlerts[index].alerts.length;
-                this.cameraAlerts[index].alerts = alerts;
-                if(alerts.length > previousLength){
-                  this.cameraAlerts[index].hasNewAlert = true;
-                }
-              } else {
-                  this.cameraAlerts.push({
-                    roomId: room.id!,
-                    roomName: room.name!,
-                    alerts: alerts,
-                    hasNewAlert: false
-                  });
-              }
-              console.log("Alerts for the selected date: ", alerts)
-            },
-            error: (err) => {
-              console.log('Failed to load alerts', err);
-            }
-          }
-        )
+      let existing = this.cameraAlerts.find(c => c.roomId === roomId);
+      if (!existing) {
+        existing = {
+          roomId: room.id!,
+          roomName: room.name!,
+          alerts: [],
+          hasNewAlert: false
+        };
+        this.cameraAlerts.push(existing);
       }
+
+      this.alertService.get_alerts_by_room_id_on_a_selected_date(roomId, formattedDate).subscribe({
+        next: (alerts: Alert[]) => {
+          const previousLength = existing!.alerts.length;
+          existing!.alerts = alerts;
+
+          if (alerts.length > previousLength) {
+            existing!.hasNewAlert = true;
+          }
+
+          console.log(`Alerts for ${room.name}:`, alerts);
+        },
+        error: (err) => {
+          console.log(`Failed to load alerts for room ${room.name}`, err);
+        }
+      });
+
+      if (this.alertSubs[roomId]) {
+        this.alertSubs[roomId].unsubscribe();
+      }
+
+      // Re-subscribe to the interval for this room
+      this.alertSubs[roomId] = interval(5000).pipe(
+        switchMap(() =>
+          this.alertService.get_alerts_by_room_id_on_a_selected_date(roomId, formattedDate)
+        )
+      ).subscribe({
+        next: (alerts: Alert[]) => {
+          const previousLength = existing!.alerts.length;
+          existing!.alerts = alerts;
+
+          if (alerts.length > previousLength) {
+            existing!.hasNewAlert = true;
+          }
+        },
+        error: (err) => {
+          console.log(`Failed to update alerts for ${room.name}`, err);
+        }
+      });
     }
+
+    // Filter out any camera alerts that no longer have a corresponding room
+    this.cameraAlerts = this.cameraAlerts.filter(c => this.rooms.some(r => r.id === c.roomId));
   }
+
 
   openAlertDetails(cameraAlert: CameraAlert) {
     this.dialog.open(AlertDialogComponent, {

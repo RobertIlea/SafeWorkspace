@@ -10,13 +10,13 @@ const BASE_URL = 'http://localhost:8080';
   providedIn: 'root'
 })
 export class RoomService {
-  private roomSubject = new BehaviorSubject<Room[]>([]);
+  private roomsSubject = new BehaviorSubject<Room[]>([]);
   constructor(private http: HttpClient) { }
 
+  rooms$ = this.roomsSubject.asObservable();
 
-  rooms$ = this.roomSubject.asObservable();
   setRooms(rooms: Room[]) {
-    this.roomSubject.next(rooms);
+    this.roomsSubject.next(rooms);
   }
   // Get all the rooms based on logged user
   get_rooms(): Observable<Room[]>{

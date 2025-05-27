@@ -9,8 +9,8 @@
   <div *ngIf="cameraAlerts.length === 0" class="no-alerts-message">
     No alerts found
   </div>
-  <div *ngFor="let room of cameraAlerts" class="alert-card" (click)="openAlertDetails(room)">
-    <div class="alert-title">
+  <div *ngFor="let room of cameraAlerts; trackBy: trackByRoomId" class="alert-card" (click)="openAlertDetails(room)">
+  <div class="alert-title">
       {{ room.roomName }}
       <span *ngIf="room.hasNewAlert" class="notification-badge"></span>
     </div>

@@ -1,18 +1,18 @@
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { RoomService } from '../../services/room.service';
-import { Room } from '../../models/room-model';
-import { SensorService } from '../../services/sensor.service';
-import { Sensor } from '../../models/sensor-model';
-import { trigger, style, animate, transition } from '@angular/animations';
-import { MatDialog } from '@angular/material/dialog';
-import { RoomDialogComponent } from '../room-dialog/room-dialog.component';
-import { AddRoomComponent } from '../add-room/add-room.component';
-import { ChartData, ChartOptions } from 'chart.js';
-import { Details } from '../../models/details-model';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
-import {interval, Subscription, switchMap} from 'rxjs';
-import { BaseChartDirective } from 'ng2-charts';
+import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {RoomService} from '../../services/room.service';
+import {Room} from '../../models/room-model';
+import {SensorService} from '../../services/sensor.service';
+import {Sensor} from '../../models/sensor-model';
+import {animate, style, transition, trigger} from '@angular/animations';
+import {MatDialog} from '@angular/material/dialog';
+import {RoomDialogComponent} from '../room-dialog/room-dialog.component';
+import {AddRoomComponent} from '../add-room/add-room.component';
+import {ChartData, ChartOptions} from 'chart.js';
+import {Details} from '../../models/details-model';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {ConfirmDialogComponent} from '../confirm-dialog/confirm-dialog.component';
+import {combineLatest, interval, map, of, startWith, Subscription, switchMap} from 'rxjs';
+import {BaseChartDirective} from 'ng2-charts';
 
 
 @Component({
@@ -37,6 +37,9 @@ export class DashboardComponent implements OnInit, OnDestroy{
   selectedDate: Date = new Date();
   hasDataForChart: boolean = true;
   sensorSub: Subscription | null = null;
+  private chartSub: Subscription | null = null;
+  private roomUpdateSub: Subscription | null = null;
+  private allRoomsSub: Subscription | null = null;
 
   constructor(
     private roomService: RoomService,
@@ -47,36 +50,118 @@ export class DashboardComponent implements OnInit, OnDestroy{
 
   ngOnInit(): void {
       this.get_rooms();
-      this.prepare_chart_data();
+      this.setupRealTimeUpdatesForAllRooms();
   }
+
   ngOnDestroy() {
     this.sensorSub?.unsubscribe();
+    this.roomUpdateSub?.unsubscribe();
+    this.allRoomsSub?.unsubscribe();
+    this.chartSub?.unsubscribe();
   }
+
   getGasLevelMessage(value: number): string {
     if (value < 200) return "Air quality: Excellent";
     if (value < 400) return "Low gas presence";
     if (value < 700) return "Moderate gas level";
     return "Dangerous gas level!";
   }
+
+  getMq2LevelMessage(value: number): string {
+    if (value < 200) return "No smoke/fuel gas present";
+    if (value < 400) return "Low smoke/fuel gas presence";
+    if (value < 700) return "Moderate smoke/fuel gas presence";
+    return "Dangerous smoke/fuel gas level!";
+  }
+
   // Card 3
+  trackByRoomId(index: number, room: Room): string {
+    return <string>room.id;
+  }
+  compareRooms(r1: Room, r2: Room): boolean {
+    return r1 && r2 ? r1.id === r2.id : r1 === r2;
+  }
+
   get_rooms(): void {
     this.roomService.get_rooms().subscribe({
       next: (room: Room[]) => {
         this.rooms = room;
         this.roomService.setRooms(room);
-
         console.log("Rooms: " , this.rooms[0]);
         console.log("Sensors: ", this.rooms[0].sensors);
 
         if(this.rooms.length > 0){
-          this.selectedRoom = this.rooms[0];
-          this.selectedSensor = this.selectedRoom?.sensors?.[0] ?? null;
-          this.prepare_chart_data();
+          if(!this.selectedRoom) {
+            this.selectedRoom = this.rooms[0];
+            this.selectedSensor = this.selectedRoom?.sensors?.[0] ?? null;
+            this.prepare_chart_data();
+          } else {
+            const updatedSelectedRoom = this.rooms.find(r => r.id === this.selectedRoom?.id);
+            if (updatedSelectedRoom) {
+              this.selectedRoom = updatedSelectedRoom;
+              this.selectedSensor = updatedSelectedRoom.sensors?.find(s => s.id === this.selectedSensor?.id) || null;
+            }
+          }
         }
       },
       error: (error) => {
         console.error(`Failed to fetch rooms`, error);
       }
+    });
+  }
+
+  private setupRealTimeUpdatesForAllRooms() {
+    this.allRoomsSub = interval(5000).pipe(
+      startWith(0),
+      switchMap(() => {
+        if (this.rooms.length === 0) return of([]);
+
+        return combineLatest(
+          this.rooms.map(room =>
+            combineLatest(
+              room.sensors!.map(sensor =>
+                this.sensorService.get_last_sensor_details(sensor.id!)
+              )
+            ).pipe(
+              map(detailsArray => {
+                // Only update what changed
+                const updatedSensors = room.sensors!.map((sensor, index) => ({
+                  ...sensor,
+                  details: detailsArray[index] ? [detailsArray[index]] : sensor.details
+                }));
+
+                // Only return new object if something actually changed
+                if (JSON.stringify(updatedSensors) !== JSON.stringify(room.sensors)) {
+                  return {
+                    ...room,
+                    sensors: updatedSensors
+                  };
+                }
+                return room;
+              })
+            )
+          )
+        );
+      })
+    ).subscribe(updatedRooms => {
+      const newRooms = this.rooms.map(oldRoom => {
+          const updatedRoom = updatedRooms.find(r => r.id === oldRoom.id);
+          return updatedRoom ? updatedRoom : oldRoom;
+        });
+
+        // Compară shallow referințele la camere
+        const hasChanged = newRooms.some((room, index) => room !== this.rooms[index]);
+
+        if (hasChanged) {
+          this.rooms = [...newRooms];
+          this.roomService.setRooms(this.rooms);
+
+          const selectedRoomId = this.selectedRoom?.id;
+          const selectedSensorId = this.selectedSensor?.id;
+
+          this.selectedRoom = this.rooms.find(r => r.id === selectedRoomId) || null;
+          this.selectedSensor = this.selectedRoom?.sensors?.find(s => s.id === selectedSensorId) || null;
+        }
     });
   }
 
@@ -87,6 +172,7 @@ export class DashboardComponent implements OnInit, OnDestroy{
 
     dialogRef.afterClosed().subscribe((newRoom) => {
       if(newRoom){
+        this.get_rooms();
         this.rooms.push(newRoom);
         console.log("Updated rooms: ", this.rooms);
       }
@@ -158,6 +244,8 @@ export class DashboardComponent implements OnInit, OnDestroy{
               return `${label}: ${value} %`;
             }else if (label.toLowerCase().includes('gas')) {
               return `${label}: ${value} – ${this.getGasLevelMessage(value)}`;
+            }else if (label.toLowerCase().includes('mq2value')) {
+              return `${label}: ${value} – ${this.getMq2LevelMessage(value)}`;
             }
             return `${label}: ${value}`;
           }
@@ -201,6 +289,7 @@ export class DashboardComponent implements OnInit, OnDestroy{
 
       if(sensorIndex !== -1) {
         this.rooms[roomIndex].sensors![sensorIndex!].details = [...details];
+        this.rooms = [...this.rooms];
         this.roomService.setRooms([...this.rooms]);
       }
     }
@@ -214,9 +303,56 @@ export class DashboardComponent implements OnInit, OnDestroy{
 
     console.log("Fetching data for: ", selectedDay);
 
-    if(this.sensorSub){
-      this.sensorSub.unsubscribe();
-    }
+    this.chartSub?.unsubscribe();
+    this.roomUpdateSub?.unsubscribe();
+
+    // Subscription for the chart data (only for the selected sensor)
+    this.chartSub = interval(5000).pipe(
+      startWith(0),
+      switchMap(() => this.sensorService.get_sensor_data_by_date(selectedId, selectedDay))
+      ).subscribe({
+        next: (details: Details[]) => {
+          this.process_chart_data(details);
+        },
+        error: (err) => {
+          console.error('Error fetching data for: ', err);
+          this.reset_chart();
+        }
+    });
+
+    // Separate subscription for room updates (all sensors)
+    this.roomUpdateSub = interval(5000).pipe(
+      startWith(0),
+      switchMap(() =>
+        combineLatest(
+          this.selectedRoom!.sensors!.map(sensor =>
+            this.sensorService.get_last_sensor_details(sensor.id!)
+          )
+        )
+      )
+    ).subscribe({
+      next: (result: Details[]) => {
+        if(this.selectedRoom){
+          const newRoom = { ...this.selectedRoom }; // Changing the room reference
+
+          newRoom.sensors = newRoom.sensors!.map((sensor, index) => {
+            const updatedSensor = { ...sensor }; // Changing sensor reference
+            updatedSensor.details = result[index] ? [result[index]] : [];
+            return updatedSensor;
+          });
+
+          const roomIndex = this.rooms.findIndex(r => r.id === this.selectedRoom!.id);
+          if (roomIndex !== -1) {
+            this.rooms[roomIndex] = newRoom;
+            this.rooms = [...this.rooms]; // Force Angular detection of the new data
+            this.roomService.setRooms(this.rooms);
+          }
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching data for: ', err);
+      }
+    })
 
     // Fetch for ngOnInit() //
     this.sensorService.get_sensor_data_by_date(selectedId, selectedDay).subscribe({
@@ -231,18 +367,6 @@ export class DashboardComponent implements OnInit, OnDestroy{
       }
     });
 
-    this.sensorSub = interval(5000).pipe(
-      switchMap(() => this.sensorService.get_sensor_data_by_date(selectedId, selectedDay))).subscribe({
-       next: (details: Details[]) => {
-         this.process_chart_data(details);
-         this.updateSensorDetailsInRooms(selectedId, details);
-         console.log("Details of the selected sensor: ", details);
-       },
-       error: (err) => {
-         console.error("Error fetching data:", err);
-         this.reset_chart();
-       }
-    });
  }
 
  process_chart_data(details: Details[]){

@@ -9,7 +9,7 @@ import { UserService } from '../../services/user.service';
 @Component({
   selector: 'app-add-room',
   standalone: false,
-  
+
   templateUrl: './add-room.component.html',
   styleUrl: './add-room.component.css'
 })
@@ -74,12 +74,12 @@ export class AddRoomComponent implements OnInit{
     this.userService.get_user_id_by_email(email).subscribe({
       next: (data: string) => {
         this.userId = data;
-        console.log("User id that is connected: " , this.userId);  
+        console.log("User id that is connected: " , this.userId);
       },
       error: (err) => {
         console.warn("Couldn't get the id from the connected user: " , err);
       }
-      
+
     })
   }
   // --------------------------------- //
@@ -90,16 +90,19 @@ export class AddRoomComponent implements OnInit{
       return;
     }
 
-    if(this.selectedSensors.length === 0){
-      this.errorMessage = "Please select at least one sensor";
-      return;
-    }
+    // if(this.selectedSensors.length === 0){
+    //   this.errorMessage = "Please select at least one sensor";
+    //   return;
+    // }
 
-    const sensorIds = this.selectedSensors.map(sensor => sensor.id!);
-    
+    const sensorIds: string[] = this.selectedSensors
+      .filter(sensor => sensor.id !== undefined && sensor.id !== null)
+      .map(sensor => sensor.id!);
+
+
     const payload = {
       roomId: this.selectedRoom.id!,
-      userId: this.userId!, 
+      userId: this.userId!,
       roomName: this.newRoomName.trim() || this.selectedRoom.name!,
       sensorIds: sensorIds
     };
