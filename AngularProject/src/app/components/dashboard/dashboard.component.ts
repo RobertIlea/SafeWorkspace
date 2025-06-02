@@ -320,40 +320,6 @@ export class DashboardComponent implements OnInit, OnDestroy{
         }
     });
 
-    // Separate subscription for room updates (all sensors)
-    this.roomUpdateSub = interval(5000).pipe(
-      startWith(0),
-      switchMap(() =>
-        combineLatest(
-          this.selectedRoom!.sensors!.map(sensor =>
-            this.sensorService.get_last_sensor_details(sensor.id!)
-          )
-        )
-      )
-    ).subscribe({
-      next: (result: Details[]) => {
-        if(this.selectedRoom){
-          const newRoom = { ...this.selectedRoom }; // Changing the room reference
-
-          newRoom.sensors = newRoom.sensors!.map((sensor, index) => {
-            const updatedSensor = { ...sensor }; // Changing sensor reference
-            updatedSensor.details = result[index] ? [result[index]] : [];
-            return updatedSensor;
-          });
-
-          const roomIndex = this.rooms.findIndex(r => r.id === this.selectedRoom!.id);
-          if (roomIndex !== -1) {
-            this.rooms[roomIndex] = newRoom;
-            this.rooms = [...this.rooms]; // Force Angular detection of the new data
-            this.roomService.setRooms(this.rooms);
-          }
-        }
-      },
-      error: (err) => {
-        console.error('Error fetching data for: ', err);
-      }
-    })
-
     // Fetch for ngOnInit() //
     this.sensorService.get_sensor_data_by_date(selectedId, selectedDay).subscribe({
       next: (details: Details[]) => {
