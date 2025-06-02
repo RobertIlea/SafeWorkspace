@@ -1,10 +1,8 @@
 package org.example.springproject.dto;
 
 import org.example.springproject.entity.Details;
-import org.example.springproject.util.SensorType;
 
 import java.util.List;
-import java.util.Map;
 
 public class SensorDTO {
     private String id;

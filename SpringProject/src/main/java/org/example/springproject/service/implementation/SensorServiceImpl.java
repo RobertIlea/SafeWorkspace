@@ -7,7 +7,7 @@ import org.example.springproject.dto.SensorDTO;
 import org.example.springproject.entity.Details;
 import org.example.springproject.entity.Sensor;
 import org.example.springproject.service.SensorService;
-import org.example.springproject.util.SensorType;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -139,11 +139,6 @@ public class SensorServiceImpl implements SensorService {
         WriteResult result = docRef.set(updatedSensor).get();
 //        sensorDataWebSocketHandler.broadcast(updatedSensor);
         return result.getUpdateTime().toString();
-    }
-
-    @Override
-    public List<String> getSensorsType(){
-        return Arrays.stream(SensorType.values()).map(Enum::name).collect(Collectors.toList());
     }
 
     @Override

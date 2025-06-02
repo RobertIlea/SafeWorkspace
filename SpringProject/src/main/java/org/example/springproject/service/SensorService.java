@@ -19,8 +19,6 @@ public interface SensorService {
 
     String saveSensorData(SensorDTO sensorDTO) throws ExecutionException, InterruptedException;
 
-    List<String> getSensorsType();
-
     SensorDTO getSensorById(String sensorId);
 
     List<Details> getSensorDataByDate(String sensorId, Date selectedDate) throws ExecutionException, InterruptedException;

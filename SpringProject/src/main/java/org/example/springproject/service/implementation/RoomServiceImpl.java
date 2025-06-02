@@ -1,3 +1,9 @@
+/**
+ * RoomServiceImpl.java
+ * This file is part of the Spring Project.
+ * It is used to implement the methods from RoomService interface.
+ * @author Ilea Robert-Ioan
+ */
 package org.example.springproject.service.implementation;
 
 import com.google.api.core.ApiFuture;
@@ -7,12 +13,10 @@ import org.example.springproject.dto.SensorDTO;
 import org.example.springproject.entity.Details;
 import org.example.springproject.entity.Room;
 import org.example.springproject.entity.Sensor;
-import org.example.springproject.service.JwtService;
 import org.example.springproject.service.RoomService;
 import org.example.springproject.util.RoomMapper;
 import org.example.springproject.util.SensorMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -20,22 +24,55 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * RoomServiceImpl is a service class that implements the RoomService interface.
+ * It provides methods to manage rooms in the Firestore database.
+ */
 @Service
 public class RoomServiceImpl implements RoomService {
 
+    /**
+     * Firestore instance used to interact with the Firestore database.
+     */
     @Autowired
     private Firestore firestore;
+
+    /**
+     * The name of the collection in Firestore where rooms are stored.
+     */
     private static final String ROOM_COLLECTION = "rooms";
+
+    /**
+     * The name of the collection in Firestore where users are stored.
+     */
     private static final String USER_COLLECTION = "users";
+
+    /**
+     * The name of the collection in Firestore where sensors are stored.
+     */
     private static final String SENSOR_COLLECTION = "sensors";
+
+    /**
+     * SensorService instance used to interact with sensors.
+     */
     private final SensorServiceImpl sensorService;
 
+    /**
+     * Constructor for RoomServiceImpl.
+     * @param firestore Firestore instance used to interact with the Firestore database.
+     * @param sensorService SensorServiceImpl instance used to interact with sensors.
+     */
     @Autowired
     public RoomServiceImpl(Firestore firestore, SensorServiceImpl sensorService) {
         this.firestore = firestore;
         this.sensorService = sensorService;
     }
 
+    /**
+     * Converts a list of QueryDocumentSnapshots to a list of RoomDTOs.
+     * @param roomDocs List of QueryDocumentSnapshots representing rooms.
+     * @return List of RoomDTOs.
+     */
     private List<RoomDTO> getRoomDTOS(List<QueryDocumentSnapshot> roomDocs) {
         return roomDocs.stream().map(doc -> {
             Room room = doc.toObject(Room.class);
@@ -48,6 +85,12 @@ public class RoomServiceImpl implements RoomService {
         }).toList();
     }
 
+    /**
+     * Adds a new room to the Firestore database.
+     * @param room The room to be added.
+     * @return A RoomDTO object containing the details of the added room.
+     * @throws RuntimeException if there is an error while adding the room.
+     */
     @Override
     public RoomDTO addRoom(Room room) throws RuntimeException {
         try{
@@ -70,6 +113,12 @@ public class RoomServiceImpl implements RoomService {
         }
     }
 
+    /**
+     * Deletes a room by its ID from the Firestore database.
+     * @param id The ID of the room to be deleted.
+     * @return A RoomDTO object containing the details of the deleted room.
+     * @throws RuntimeException if there is an error while deleting the room or if the room does not exist.
+     */
     @Override
     public RoomDTO deleteRoomById(String id) throws RuntimeException{
         try{
@@ -94,6 +143,13 @@ public class RoomServiceImpl implements RoomService {
         }
     }
 
+    /**
+     * Updates a room by its ID in the Firestore database.
+     * @param id The ID of the room to be updated.
+     * @param updatedRoom The updated room object.
+     * @return A RoomDTO object containing the details of the updated room.
+     * @throws RuntimeException if there is an error while updating the room or if the room does not exist.
+     */
     @Override
     public RoomDTO updateRoom(String id, Room updatedRoom) throws RuntimeException{
         try{
@@ -119,23 +175,14 @@ public class RoomServiceImpl implements RoomService {
         }
     }
 
+    /**
+     * Retrieves a room by its ID from the Firestore database.
+     * @param roomId The ID of the room to be retrieved.
+     * @return A RoomDTO object containing the details of the retrieved room.
+     * @throws RuntimeException if there is an error while retrieving the room or if the room does not exist.
+     */
     @Override
-    public List<RoomDTO> getRooms() throws RuntimeException{
-        try{
-            ApiFuture<QuerySnapshot> future = firestore.collection(ROOM_COLLECTION).get();
-            List<QueryDocumentSnapshot> documents = future.get().getDocuments();
-
-            return getRoomDTOS(documents);
-        }catch (ExecutionException | InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Error during Firestore operation: " + e.getMessage(), e);
-        } catch (Exception e) {
-            throw new RuntimeException("Error while fetching the rooms: " + e.getMessage(), e);
-        }
-    }
-
-    @Override
-    public RoomDTO getRoomById(String roomId){
+    public RoomDTO getRoomById(String roomId) throws RuntimeException{
         try{
             DocumentReference roomRef = firestore.collection(ROOM_COLLECTION).document(roomId);
             DocumentSnapshot roomSnapshot = roomRef.get().get();
@@ -148,13 +195,18 @@ public class RoomServiceImpl implements RoomService {
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> mapList = (List<Map<String, Object>>) roomSnapshot.get("sensors");
             return new RoomDTO(roomId,SensorMapper.toDTOListMap(mapList),room.getName(),room.getUserId());
-        } catch (ExecutionException | InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException("Error while fetching the room by id: " + e.getMessage(), e);
         }
     }
 
+    /**
+     * Retrieves all the available rooms from the Firestore database.
+     * @return A list of RoomDTO objects containing the details of all the available rooms.
+     * @throws RuntimeException if there is an error while retrieving the available rooms.
+     */
     @Override
-    public List<RoomDTO> getAvailableRooms() {
+    public List<RoomDTO> getAvailableRooms() throws RuntimeException{
         // Rooms that are not assigned to any user
         try {
             ApiFuture<QuerySnapshot> future = firestore.collection(ROOM_COLLECTION).whereEqualTo("userId", "").get();
@@ -170,28 +222,37 @@ public class RoomServiceImpl implements RoomService {
             }
 
             return availableRooms;
-        } catch (ExecutionException | InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException("Error while fetching the available rooms: " + e.getMessage(), e);
         }
     }
 
+    /**
+     * Retrieves all the rooms assigned to a specific user by their user ID.
+     * @param id The ID of the user for whom the rooms are to be retrieved.
+     * @return A list of RoomDTO objects containing the details of the rooms assigned to the user.
+     * @throws RuntimeException if there is an error while retrieving the rooms or if the user does not exist.
+     */
     @Override
-    public List<RoomDTO> getRoomsByUserId(String id){
+    public List<RoomDTO> getRoomsByUserId(String id) throws RuntimeException{
         try{
             ApiFuture<QuerySnapshot> future = firestore.collection(ROOM_COLLECTION).whereEqualTo("userId", id).get();
             List<QueryDocumentSnapshot> documents = future.get().getDocuments();
 
             return getRoomDTOS(documents);
-        }catch (ExecutionException | InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Error during Firestore operation: " + e.getMessage(), e);
         } catch (Exception e) {
             throw new RuntimeException("Error while fetching the rooms by userId: " + e.getMessage(), e);
         }
     }
 
+    /**
+     * Retrieves all the rooms assigned to a specific user by their email.
+     * @param email The email of the user for whom the rooms are to be retrieved.
+     * @return A list of RoomDTO objects containing the details of the rooms assigned to the user.
+     * @throws RuntimeException if there is an error while retrieving the rooms or if the user does not exist.
+     */
     @Override
-    public List<RoomDTO> getRoomsByUserEmail(String email){
+    public List<RoomDTO> getRoomsByUserEmail(String email) throws RuntimeException{
         try{
             ApiFuture<QuerySnapshot> future = firestore.collection(USER_COLLECTION).whereEqualTo("email", email).get();
             List<QueryDocumentSnapshot> documents = future.get().getDocuments();
@@ -201,13 +262,20 @@ public class RoomServiceImpl implements RoomService {
             }
             String userId = documents.get(0).getId();
             return getRoomsByUserId(userId);
-        } catch (ExecutionException | InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException("Error while fetching the rooms by user email: " + e.getMessage(), e);
         }
     }
 
+    /**
+     * Adds a sensor to a room by its ID.
+     * @param id The ID of the room to which the sensor is to be added.
+     * @param sensorId The ID of the sensor to be added to the room.
+     * @return A RoomDTO object containing the details of the updated room.
+     * @throws RuntimeException if there is an error while adding the sensor or if the room or sensor does not exist.
+     */
     @Override
-    public RoomDTO addSensorToRoom(String id, String sensorId){
+    public RoomDTO addSensorToRoom(String id, String sensorId) throws RuntimeException{
         try{
             DocumentReference roomRef = firestore.collection(ROOM_COLLECTION).document(id);
             DocumentSnapshot roomSnapshot = roomRef.get().get();
@@ -250,23 +318,19 @@ public class RoomServiceImpl implements RoomService {
 
             return new RoomDTO(id,sensorsList, roomSnapshot.getString("name"), roomSnapshot.getString("userId"));
 
-        } catch (ExecutionException | InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException("Error while adding sensor to room: " + e.getMessage(), e);
         }
     }
 
+    /**
+     * Retrieves all the sensors associated with a specific room by its ID.
+     * @param id The ID of the room for which the sensors are to be retrieved.
+     * @return A list of SensorDTO objects containing the details of the sensors associated with the room.
+     * @throws RuntimeException if there is an error while retrieving the sensors or if the room does not exist.
+     */
     @Override
-    public List<RoomDTO> getRoomsByAuthenticatedUser(){
-        String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        if(userId == null){
-            throw new RuntimeException("User is not logged in!");
-        }
-        return getRoomsByUserId(userId);
-    }
-
-    @Override
-    public List<SensorDTO> getSensorsByRoomId(String id){
+    public List<SensorDTO> getSensorsByRoomId(String id) throws RuntimeException{
         try{
             ApiFuture<DocumentSnapshot> future = firestore.collection(ROOM_COLLECTION).document(id).get();
             DocumentSnapshot documentSnapshot = future.get();
@@ -296,11 +360,19 @@ public class RoomServiceImpl implements RoomService {
                 }
             }
             return sensorDTOs;
-        } catch (ExecutionException | InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException("Error while fetching sensors by room id: " + e.getMessage(), e);
         }
     }
 
+    /**
+     * Updates a room with sensor data by its ID.
+     * @param roomId The ID of the room to be updated.
+     * @param sensorDTO The SensorDTO object containing the sensor data to be updated.
+     * @return A string representing the update time of the room.
+     * @throws ExecutionException if there is an error during the execution of the Firestore operation.
+     * @throws InterruptedException if the thread is interrupted while waiting for the Firestore operation to complete.
+     */
     @Override
     public String updateRoomWithSensorData(String roomId, SensorDTO sensorDTO) throws ExecutionException, InterruptedException {
         DocumentReference roomRef = firestore.collection(ROOM_COLLECTION).document(roomId);
@@ -330,8 +402,17 @@ public class RoomServiceImpl implements RoomService {
         return result.getUpdateTime().toString();
     }
 
+    /**
+     * Assigns a room to a user by updating the room's userId and name, and adding selected sensors.
+     * @param roomId The ID of the room to be assigned.
+     * @param userId The ID of the user to whom the room is being assigned.
+     * @param newName The new name for the room.
+     * @param selectedSensorIds The list of sensor IDs to be associated with the room.
+     * @return A RoomDTO object containing the details of the updated room.
+     * @throws RuntimeException if there is an error while assigning the room or if the room is already assigned.
+     */
     @Override
-    public RoomDTO assignRoomToUser(String roomId, String userId, String newName, List<String> selectedSensorIds){
+    public RoomDTO assignRoomToUser(String roomId, String userId, String newName, List<String> selectedSensorIds) throws RuntimeException{
         RoomDTO roomDTO = getRoomById(roomId);
         if(roomDTO.getUserId().isEmpty()){
             roomDTO.setUserId(null);
@@ -364,17 +445,20 @@ public class RoomServiceImpl implements RoomService {
             roomRef.set(roomDTO).get();
 
             return roomDTO;
-
-        } catch (ExecutionException | InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Error during Firestore operation: " + e.getMessage(), e);
         } catch (Exception e) {
-            throw new RuntimeException("Error while assigning the room to the user: " + e.getMessage(), e);
+            throw new RuntimeException("Error while trying to assign the room to the user: " + e.getMessage(), e);
         }
     }
 
+    /**
+     * Removes a user from a room by setting the userId to an empty string.
+     * @param roomId The ID of the room from which the user is to be removed.
+     * @param userId The ID of the user to be removed from the room.
+     * @return A RoomDTO object containing the details of the updated room.
+     * @throws RuntimeException if there is an error while removing the user or if the room does not exist.
+     */
     @Override
-    public RoomDTO removeUserFromRoom(String roomId, String userId){
+    public RoomDTO removeUserFromRoom(String roomId, String userId) throws RuntimeException{
         try{
             DocumentReference roomRef = firestore.collection(ROOM_COLLECTION).document(roomId);
             ApiFuture<DocumentSnapshot> future = roomRef.get();
@@ -394,8 +478,8 @@ public class RoomServiceImpl implements RoomService {
             List<Map<String,Object>> sensorsData = (List<Map<String, Object>>) snapshot.get("sensors");
 
             return RoomMapper.toDTO(roomId,room,sensorsData);
-        } catch (ExecutionException | InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException("Error while removing user from room: " + e.getMessage(), e);
         }
     }
 }
