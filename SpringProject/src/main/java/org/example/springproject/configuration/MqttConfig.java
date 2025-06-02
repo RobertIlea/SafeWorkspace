@@ -35,6 +35,7 @@ public class MqttConfig {
     private final String topicDht22= "sensor/dht22/data";
     private final String topicMq5 = "sensor/mq5/data";
     private final String topicEsp32x1 = "sensor/esp32x1/data";
+    private final String topicEsp32x2 = "sensor/esp32x2/data";
 
     @Autowired
     private final SensorService sensorService;
@@ -87,7 +88,7 @@ public class MqttConfig {
     @Bean
     public MqttPahoMessageDrivenChannelAdapter inbound() {
         MqttPahoMessageDrivenChannelAdapter adapter =
-                new MqttPahoMessageDrivenChannelAdapter(brokerUrl, "testClient", topicDht22, topicMq5,topicEsp32x1);
+                new MqttPahoMessageDrivenChannelAdapter(brokerUrl, "testClient", topicDht22, topicMq5,topicEsp32x1,topicEsp32x2);
         adapter.setCompletionTimeout(8000);
         adapter.setConverter(new DefaultPahoMessageConverter());
         adapter.setQos(0);
@@ -268,6 +269,7 @@ public class MqttConfig {
 
                 String primaryRoomId = "1RdkB5aniSqVc1GayEVr";
                 String esp32x1RoomId = "9JFObYv8R4mCtkYtac77";
+                String esp32x2RoomId = "jmwXMITpjvJSSK1egu4O";
 
                 if (topic.equals(topicDht22)) {
                     System.out.println("Processing DHT22 topic: " + topic);
@@ -335,6 +337,34 @@ public class MqttConfig {
 
                     processDataForRoom(esp32x1Mq2SensorDTO,esp32x1RoomId);
                     processDataForRoom(esp32x1Mq5SensorDTO,esp32x1RoomId);
+
+                }
+                if(topic.equals(topicEsp32x2)){
+                    System.out.println("Processing Esp32x2 topic: " + topic);
+                    Gson gson = new Gson();
+
+                    @SuppressWarnings("unchecked")
+                    Map<String,Object> data = gson.fromJson(payload,Map.class);
+                    int mq2Value = ((Number) data.get("mq2Value")).intValue();
+                    float temperature = ((Number) data.get("temperature")).floatValue();
+                    float humidity = ((Number) data.get("humidity")).floatValue();
+                    long timestamp = Long.parseLong((String) data.get("timestamp"));
+
+                    Map<String,Float> esp32x2Mq2Data = new HashMap<>();
+                    esp32x2Mq2Data.put("mq2Value", (float) mq2Value);
+                    Details detailsMq2 = new Details(timestamp,esp32x2Mq2Data);
+                    String mq2SensorId = "bS85GgrlLs9ikiNG0EXU";
+                    SensorDTO esp32x2Mq2SensorDTO = new SensorDTO(mq2SensorId,"MQ2",36,List.of(detailsMq2));
+
+                    Map<String,Float> esp32x2Dht22Data = new HashMap<>();
+                    esp32x2Dht22Data.put("temperature", temperature);
+                    esp32x2Dht22Data.put("humidity", humidity);
+                    Details detailsDht22 = new Details(timestamp,esp32x2Dht22Data);
+                    String dhtSensorId = "OpjcAjYNdCkMgEb2CV0T";
+                    SensorDTO esp32x2Dht22SensorDTO = new SensorDTO(dhtSensorId,"DHT22",4,List.of(detailsDht22));
+
+                    processDataForRoom(esp32x2Mq2SensorDTO,esp32x2RoomId);
+                    processDataForRoom(esp32x2Dht22SensorDTO,esp32x2RoomId);
 
                 }
 

@@ -29,6 +29,7 @@ public class AlertServiceImpl implements AlertService {
             throw new RuntimeException(e);
         }
     }
+
     @Override
     public List<AlertDTO> getAlerts(String roomId) {
         try {

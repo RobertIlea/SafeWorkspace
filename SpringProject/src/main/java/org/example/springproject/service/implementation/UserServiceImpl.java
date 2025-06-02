@@ -36,12 +36,12 @@ public class UserServiceImpl implements UserService {
         return pattern.matcher(email).matches();
     }
 
-    private void userVerification(User user) {
+    public void userVerification(User user) {
         if(!isEmailValid(user.getEmail())){
             throw new RuntimeException("Invalid email format!");
         }
         if(user.getName().length() < 5 || user.getName().length() > 32){
-            throw new RuntimeException("Name length must be between 5 and 20");
+            throw new RuntimeException("Name length must be between 5 and 32");
         }
         if(user.getPassword().isEmpty() || user.getPassword().length() < 8 ){
             throw new RuntimeException("Length of the password must be greater than 8 characters");
@@ -152,7 +152,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDTO getUserById(String id){
+    public UserDTO getUserById(String id) throws RuntimeException{
         try{
             DocumentReference documentReference = firestore.collection(USER_COLLECTION).document(id);
             ApiFuture<DocumentSnapshot> future = documentReference.get();
