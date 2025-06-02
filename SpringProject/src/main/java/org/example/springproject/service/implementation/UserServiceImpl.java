@@ -75,7 +75,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDTO deleteUserbyId(String id) throws RuntimeException{
+    public UserDTO deleteUserById(String id) throws RuntimeException{
         try{
             DocumentReference userRef = firestore.collection(USER_COLLECTION).document(id);
             DocumentSnapshot userSnapshot = userRef.get().get();

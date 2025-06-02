@@ -208,7 +208,7 @@ public class UserServiceImplTest {
         when(deleteFuture.get()).thenReturn(writeResult);
 
         // Act
-        UserDTO result = userService.deleteUserbyId(userId);
+        UserDTO result = userService.deleteUserById(userId);
 
         // Assert
         assertNotNull(result);

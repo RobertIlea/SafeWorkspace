@@ -1,3 +1,9 @@
+/**
+ * CustomAlertServiceImpl.java
+ * This file is part of the Spring Project.
+ * It is used to implement the CustomAlertService interface.
+ * @author Ilea Robert-Ioan
+ */
 package org.example.springproject.service.implementation;
 
 import com.google.cloud.firestore.DocumentReference;
@@ -14,12 +20,30 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
+/**
+ * CustomAlertServiceImpl is a service class that implements the CustomAlertService interface.
+ * It provides methods to manage custom alerts in the Firestore database.
+ */
 @Service
 public class CustomAlertServiceImpl implements CustomAlertService {
+
+    /**
+     * Firestore instance used to interact with the Firestore database.
+     */
     @Autowired
     private Firestore firestore;
+
+    /**
+     * The name of the collection in Firestore where custom alerts are stored.
+     */
     private static final String CUSTOM_ALERTS_COLLECTION = "custom_alerts";
 
+    /**
+     * Saves a custom alert to the Firestore database.
+     * @param customAlert The custom alert to be saved.
+     * @return A CustomAlertDTO object containing the details of the saved custom alert.
+     * @throws RuntimeException if there is an error while saving the custom alert.
+     */
     @Override
     public CustomAlertDTO saveCustomAlert(CustomAlert customAlert) throws RuntimeException {
         try{
@@ -34,6 +58,11 @@ public class CustomAlertServiceImpl implements CustomAlertService {
         }
     }
 
+    /**
+     * Retrieves all custom alerts from the Firestore database.
+     * @return A list of CustomAlertDTO objects containing the details of all custom alerts.
+     * @throws RuntimeException if there is an error while retrieving the custom alerts.
+     */
     @Override
     public List<CustomAlertDTO> getAllCustomAlerts() throws RuntimeException {
         try{
@@ -49,6 +78,12 @@ public class CustomAlertServiceImpl implements CustomAlertService {
         }
     }
 
+    /**
+     * Retrieves all custom alerts for a specific sensor from the Firestore database.
+     * @param sensorId The ID of the sensor for which custom alerts are to be retrieved.
+     * @return A list of CustomAlert objects containing the details of all custom alerts for the specified sensor.
+     * @throws RuntimeException if there is an error while retrieving the custom alerts.
+     */
     @Override
     public List<CustomAlert> getAllCustomAlertsBySensorId(String sensorId) throws RuntimeException {
         try {
@@ -62,6 +97,12 @@ public class CustomAlertServiceImpl implements CustomAlertService {
         }
     }
 
+    /**
+     * Retrieves a custom alert by its ID from the Firestore database.
+     * @param alertId The ID of the custom alert to be retrieved.
+     * @return A CustomAlertDTO object containing the details of the custom alert.
+     * @throws RuntimeException if there is an error while retrieving the custom alert.
+     */
     @Override
     public CustomAlertDTO getCustomAlertById(String alertId) throws RuntimeException {
         try {
@@ -76,6 +117,12 @@ public class CustomAlertServiceImpl implements CustomAlertService {
         }
     }
 
+    /**
+     * Retrieves all custom alerts for a specific user from the Firestore database.
+     * @param userId The ID of the user for whom custom alerts are to be retrieved.
+     * @return A list of CustomAlertDTO objects containing the details of all custom alerts for the specified user.
+     * @throws RuntimeException if there is an error while retrieving the custom alerts.
+     */
     @Override
     public List<CustomAlertDTO> getCustomAlertsByUserId(String userId) throws RuntimeException {
         try {
@@ -92,6 +139,12 @@ public class CustomAlertServiceImpl implements CustomAlertService {
         }
     }
 
+    /**
+     * Deletes a custom alert by its ID from the Firestore database.
+     * @param alertId The ID of the custom alert to be deleted.
+     * @return A CustomAlertDTO object containing the details of the deleted custom alert.
+     * @throws RuntimeException if there is an error while deleting the custom alert.
+     */
     @Override
     public CustomAlertDTO deleteAlertById(String alertId) throws RuntimeException {
         try {
@@ -114,6 +167,13 @@ public class CustomAlertServiceImpl implements CustomAlertService {
         }
     }
 
+    /**
+     * Updates a custom alert by its ID in the Firestore database.
+     * @param alertId The ID of the custom alert to be updated.
+     * @param updatedAlert The updated custom alert object.
+     * @return A CustomAlertDTO object containing the details of the updated custom alert.
+     * @throws RuntimeException if there is an error while updating the custom alert.
+     */
     @Override
     public CustomAlertDTO updateCustomAlert(String alertId, CustomAlert updatedAlert) throws RuntimeException {
         try {

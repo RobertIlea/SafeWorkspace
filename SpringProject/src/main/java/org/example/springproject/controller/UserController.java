@@ -70,7 +70,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<UserDTO> deleteUserById(@PathVariable String id) {
         try {
-            UserDTO userDTO = userService.deleteUserbyId(id);
+            UserDTO userDTO = userService.deleteUserById(id);
             return ResponseEntity.ok(userDTO);
         } catch (RuntimeException e) {
             UserDTO errorDTO = new UserDTO("Error: " + e.getMessage(), "", "");
