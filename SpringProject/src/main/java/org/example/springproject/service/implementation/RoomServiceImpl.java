@@ -47,6 +47,7 @@ public class RoomServiceImpl implements RoomService {
             return RoomMapper.toDTO(doc.getId(), room, sensorMaps);
         }).toList();
     }
+
     @Override
     public RoomDTO addRoom(Room room) throws RuntimeException {
         try{
@@ -173,6 +174,7 @@ public class RoomServiceImpl implements RoomService {
             throw new RuntimeException(e);
         }
     }
+
     @Override
     public List<RoomDTO> getRoomsByUserId(String id){
         try{
@@ -187,6 +189,7 @@ public class RoomServiceImpl implements RoomService {
             throw new RuntimeException("Error while fetching the rooms by userId: " + e.getMessage(), e);
         }
     }
+
     @Override
     public List<RoomDTO> getRoomsByUserEmail(String email){
         try{
@@ -202,6 +205,7 @@ public class RoomServiceImpl implements RoomService {
             throw new RuntimeException(e);
         }
     }
+
     @Override
     public RoomDTO addSensorToRoom(String id, String sensorId){
         try{
@@ -250,6 +254,7 @@ public class RoomServiceImpl implements RoomService {
             throw new RuntimeException(e);
         }
     }
+
     @Override
     public List<RoomDTO> getRoomsByAuthenticatedUser(){
         String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -382,6 +387,7 @@ public class RoomServiceImpl implements RoomService {
                 throw new RuntimeException("User does not own this room!");
             }
 
+            room.setUserId("");
             roomRef.update("userId", "").get();
 
             @SuppressWarnings("unchecked")

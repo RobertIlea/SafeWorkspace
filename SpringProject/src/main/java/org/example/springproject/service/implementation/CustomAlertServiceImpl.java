@@ -21,7 +21,7 @@ public class CustomAlertServiceImpl implements CustomAlertService {
     private static final String CUSTOM_ALERTS_COLLECTION = "custom_alerts";
 
     @Override
-    public CustomAlertDTO saveCustomAlert(CustomAlert customAlert){
+    public CustomAlertDTO saveCustomAlert(CustomAlert customAlert) throws RuntimeException {
         try{
             if(customAlert.getUserId() == null || customAlert.getRoomId() == null || customAlert.getSensorId() == null) {
                 throw new IllegalArgumentException("User ID, Room ID, and Sensor ID cannot be null");
@@ -35,7 +35,7 @@ public class CustomAlertServiceImpl implements CustomAlertService {
     }
 
     @Override
-    public List<CustomAlertDTO> getAllCustomAlerts(){
+    public List<CustomAlertDTO> getAllCustomAlerts() throws RuntimeException {
         try{
             return firestore.collection(CUSTOM_ALERTS_COLLECTION)
                     .get()
@@ -50,7 +50,7 @@ public class CustomAlertServiceImpl implements CustomAlertService {
     }
 
     @Override
-    public List<CustomAlert> getAllCustomAlertsBySensorId(String sensorId){
+    public List<CustomAlert> getAllCustomAlertsBySensorId(String sensorId) throws RuntimeException {
         try {
             return firestore.collection(CUSTOM_ALERTS_COLLECTION)
                     .whereEqualTo("sensorId", sensorId)
@@ -63,7 +63,7 @@ public class CustomAlertServiceImpl implements CustomAlertService {
     }
 
     @Override
-    public CustomAlertDTO getCustomAlertById(String alertId) {
+    public CustomAlertDTO getCustomAlertById(String alertId) throws RuntimeException {
         try {
             CustomAlert customAlert = firestore.collection(CUSTOM_ALERTS_COLLECTION).document(alertId).get().get().toObject(CustomAlert.class);
             if (customAlert != null) {
@@ -77,7 +77,7 @@ public class CustomAlertServiceImpl implements CustomAlertService {
     }
 
     @Override
-    public List<CustomAlertDTO> getCustomAlertsByUserId(String userId){
+    public List<CustomAlertDTO> getCustomAlertsByUserId(String userId) throws RuntimeException {
         try {
             return firestore.collection(CUSTOM_ALERTS_COLLECTION)
                     .whereEqualTo("userId", userId)
@@ -93,7 +93,7 @@ public class CustomAlertServiceImpl implements CustomAlertService {
     }
 
     @Override
-    public CustomAlertDTO deleteAlertById(String alertId){
+    public CustomAlertDTO deleteAlertById(String alertId) throws RuntimeException {
         try {
             DocumentReference documentReference = firestore.collection(CUSTOM_ALERTS_COLLECTION).document(alertId);
             DocumentSnapshot documentSnapshot = documentReference.get().get();
@@ -115,7 +115,7 @@ public class CustomAlertServiceImpl implements CustomAlertService {
     }
 
     @Override
-    public CustomAlertDTO updateCustomAlert(String alertId, CustomAlert updatedAlert) {
+    public CustomAlertDTO updateCustomAlert(String alertId, CustomAlert updatedAlert) throws RuntimeException {
         try {
             DocumentReference documentReference = firestore.collection(CUSTOM_ALERTS_COLLECTION).document(alertId);
             DocumentSnapshot documentSnapshot = documentReference.get().get();

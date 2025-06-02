@@ -1,3 +1,10 @@
+/**
+ * SensorServiceImplTest.java
+ * This file is part of the Spring Project.
+ * It is a test class for the SensorServiceImpl, which provides unit tests for sensor-related operations.
+ * It uses Mockito to mock Firestore interactions and verify the behavior of the service methods.
+ * @author Ilea Robert-Ioan
+ */
 package org.example.springproject.tests;
 
 import com.google.api.core.ApiFuture;
@@ -18,20 +25,41 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Test class for SensorServiceImpl
+ * This class contains unit tests for the methods in SensorServiceImpl.
+ */
 @ExtendWith(MockitoExtension.class)
 public class SensorServiceImplTest {
+    /**
+     * Mocked Firestore instance used for testing.
+     */
     @Mock
     private Firestore firestore;
 
+    /**
+     * Mocked Firestore collection reference.
+     */
     @Mock
     private CollectionReference collectionReference;
 
+    /**
+     * Mocked Firestore document reference.
+     */
     @Mock
     private DocumentReference documentReference;
 
+    /**
+     * The SensorServiceImpl instance to be tested.
+     * This is the class under test that contains the business logic for sensor operations.
+     */
     @InjectMocks
     private SensorServiceImpl sensorServiceImpl;
 
+    /**
+     * Test method to verify that a sensor can be added successfully.
+     * It mocks the Firestore interactions and verifies the expected behavior.
+     */
     @Test
     void shouldAddSensorSuccessfully() throws Exception {
         Sensor sensor = new Sensor();
@@ -59,6 +87,10 @@ public class SensorServiceImplTest {
         assertEquals(detailsList, sensorDTO.getDetails());
     }
 
+    /**
+     * Test method to verify that a sensor can be deleted by its ID.
+     * It mocks the Firestore interactions and verifies the expected behavior.
+     */
     @Test
     void shouldDeleteSensorByIdSuccessfully() throws Exception {
         String sensorId = "sensor123";
@@ -88,6 +120,10 @@ public class SensorServiceImplTest {
         verify(documentReference).delete();
     }
 
+    /**
+     * Test method to verify that a sensor can be updated successfully.
+     * It mocks the Firestore interactions and verifies the expected behavior.
+     */
     @Test
     void shouldUpdateSensorSuccessfully() throws Exception {
         String sensorId = "sensor123";
@@ -114,6 +150,10 @@ public class SensorServiceImplTest {
         assertEquals(3, result.getPort());
     }
 
+    /**
+     * Test method to verify that all sensors can be retrieved successfully.
+     * It mocks the Firestore interactions and verifies the expected behavior.
+     */
     @Test
     void shouldReturnAllSensors() throws Exception {
         QueryDocumentSnapshot doc1 = mock(QueryDocumentSnapshot.class);
@@ -137,6 +177,11 @@ public class SensorServiceImplTest {
         assertEquals("s1", sensors.get(0).getId());
     }
 
+    /**
+     * Test method to verify that SaveSensorData method saves sensor data successfully.
+     * It mocks the Firestore interactions and verifies the expected behavior.
+     * This method simulates saving sensor data to Firestore.
+     */
     @Test
     void shouldSaveSensorDataSuccessfully() throws Exception {
         String sensorId = "sensor123";
@@ -174,6 +219,10 @@ public class SensorServiceImplTest {
         assertNotNull(result);
     }
 
+    /**
+     * Test method to verify that a sensor can be retrieved by its ID.
+     * It mocks the Firestore interactions and verifies the expected behavior.
+     */
     @Test
     void shouldGetSensorByIdSuccessfully() throws Exception {
         String sensorId = "sensor123";
@@ -202,6 +251,10 @@ public class SensorServiceImplTest {
         assertEquals("Temperature", result.getSensorType());
     }
 
+    /**
+     * Test method to verify that sensor data can be retrieved by date.
+     * It mocks the Firestore interactions and verifies the expected behavior.
+     */
     @Test
     void shouldGetSensorDataByDateSuccessfully() throws Exception {
         String sensorId = "sensor123";
@@ -234,6 +287,10 @@ public class SensorServiceImplTest {
         assertEquals(data, result.get(0).getData());
     }
 
+    /**
+     * Test method to verify that the last detail for a sensor can be retrieved successfully.
+     * It mocks the Firestore interactions and verifies the expected behavior.
+     */
     @Test
     void shouldGetLastDetailForSensorSuccessfully() throws Exception {
         String sensorId = "sensor123";
