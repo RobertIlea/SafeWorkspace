@@ -1,3 +1,8 @@
+/**
+ * SensorService.java
+ * This interface defines the contract for sensor-related operations in the application.
+ * @author Ilea Robert-Ioan
+ */
 package org.example.springproject.service;
 
 import org.example.springproject.dto.SensorDTO;
@@ -6,22 +11,65 @@ import org.example.springproject.entity.Sensor;
 
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
+/**
+ * SensorService provides methods to manage sensors, including adding, deleting, updating and retrieving sensor information.
+ */
 public interface SensorService {
+
+    /**
+     * Adds a new sensor to the system.
+     * @param sensor The sensor to be added.
+     * @return The added sensor as a SensorDTO.
+     */
     SensorDTO addSensor(Sensor sensor);
 
+    /**
+     * Deletes a sensor by its ID.
+     * @param id The ID of the sensor to be deleted.
+     * @return The deleted sensor as a SensorDTO.
+     */
     SensorDTO deleteSensorById(String id);
 
+    /**
+     * Updates an existing sensor.
+     * @param id The ID of the sensor to be updated.
+     * @param updatedSensor The updated sensor information.
+     * @return The updated sensor as a SensorDTO.
+     */
     SensorDTO updateSensor(String id, Sensor updatedSensor);
 
+    /**
+     * Retrieves all sensors.
+     * @return A list of all sensors as SensorDTOs.
+     */
     List<SensorDTO> getSensors();
 
-    String saveSensorData(SensorDTO sensorDTO) throws ExecutionException, InterruptedException;
+    /**
+     * Saves sensor data.
+     * @param sensorDTO The sensor data to be saved.
+     * @return A string indicating the result of the save operation.
+     */
+    String saveSensorData(SensorDTO sensorDTO);
 
+    /**
+     * Retrieves a sensor by its ID.
+     * @param sensorId The ID of the sensor to be retrieved.
+     * @return The sensor as a SensorDTO.
+     */
     SensorDTO getSensorById(String sensorId);
 
-    List<Details> getSensorDataByDate(String sensorId, Date selectedDate) throws ExecutionException, InterruptedException;
+    /**
+     * Retrieves all sensor data for a specific sensor ID.
+     * @param sensorId The ID of the sensor for which to retrieve data.
+     * @return A list of Details objects representing the sensor data.
+     */
+    List<Details> getSensorDataByDate(String sensorId, Date selectedDate);
 
+    /**
+     * Retrieves the last detail for a specific sensor ID.
+     * @param sensorId The ID of the sensor for which to retrieve the last detail.
+     * @return The last Details object for the specified sensor ID.
+     */
     Details getLastDetailForSensor(String sensorId);
 }

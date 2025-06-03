@@ -94,12 +94,6 @@ public class SensorController {
         }
     }
 
-    @GetMapping("/types")
-    public ResponseEntity<List<String>> getSensorsTypes(){
-        List<String> sensorsTypes = sensorService.getSensorsType();
-        return ResponseEntity.ok(sensorsTypes);
-    }
-
     @GetMapping("/{sensorId}/data/{date}")
     public ResponseEntity<List<Details>> getSensorDataByDate(@PathVariable String sensorId, @PathVariable String date) {
         try {

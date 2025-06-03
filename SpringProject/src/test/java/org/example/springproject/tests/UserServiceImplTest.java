@@ -13,6 +13,7 @@ import com.google.cloud.firestore.*;
 import org.example.springproject.dto.UserDTO;
 import org.example.springproject.entity.User;
 import org.example.springproject.service.implementation.UserServiceImpl;
+import org.example.springproject.util.EncryptionService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,6 +22,9 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -55,6 +59,9 @@ public class UserServiceImplTest {
      */
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private EncryptionService encryptionService;
 
     /**
      * The UserServiceImpl instance that is being tested.
@@ -326,4 +333,46 @@ public class UserServiceImplTest {
         verify(collectionReference).document(userId);
         verify(documentReference).get();
     }
+
+    @Test
+    void shouldUpdateUserPhoneSuccessfully() throws Exception {
+        // Arrange
+        String userId = "user123";
+        String plainPhone = "0745123456";
+        String encryptedPhone = "encrypted_0745123456";
+
+        // Mock Firestore references
+        when(firestore.collection("users")).thenReturn(collectionReference);
+        when(collectionReference.document(userId)).thenReturn(documentReference);
+
+        // Mock document snapshot
+        ApiFuture<DocumentSnapshot> getFuture = mock(ApiFuture.class);
+        DocumentSnapshot documentSnapshot = mock(DocumentSnapshot.class);
+        when(documentReference.get()).thenReturn(getFuture);
+        when(getFuture.get()).thenReturn(documentSnapshot);
+        when(documentSnapshot.exists()).thenReturn(true);
+
+        // Mock encryption
+        when(encryptionService.encrypt(plainPhone)).thenReturn(encryptedPhone);
+
+        // Mock update call
+        ApiFuture<WriteResult> updateFuture = mock(ApiFuture.class);
+        when(documentReference.update(any(Map.class))).thenReturn(updateFuture);
+
+        // Act
+        userService.updateUserPhone(userId, plainPhone);
+
+        // Assert
+        verify(firestore).collection("users");
+        verify(collectionReference).document(userId);
+        verify(documentReference).get();
+        verify(documentReference).update(argThat(map ->
+                map.containsKey("phone") && map.get("phone").equals(encryptedPhone)
+        ));
+        verify(encryptionService).encrypt(plainPhone);
+    }
+
+
+
+
 }

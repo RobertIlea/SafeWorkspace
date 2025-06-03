@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 @RestController
@@ -94,7 +95,16 @@ public class UserController {
             return new ResponseEntity<>(errorDTO, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
+    @PutMapping("{id}/phone")
+    public ResponseEntity<String> updateUserPhone(@PathVariable String id, @RequestBody Map<String, String> requestBody ){
+        try{
+            String phoneNumber = requestBody.get("phoneNumber");
+            userService.updateUserPhone(id,phoneNumber);
+            return ResponseEntity.ok("Successfully updated the user's phone number");
+        }catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
     @GetMapping("/email/{email}")
     public ResponseEntity<String> getUserIdByEmail(@PathVariable String email){
         try {

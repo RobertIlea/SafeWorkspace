@@ -13,11 +13,9 @@ import org.example.springproject.dto.CustomAlertDTO;
 import org.example.springproject.entity.CustomAlert;
 import org.example.springproject.service.CustomAlertService;
 import org.example.springproject.util.CustomAlertMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 /**
@@ -30,13 +28,20 @@ public class CustomAlertServiceImpl implements CustomAlertService {
     /**
      * Firestore instance used to interact with the Firestore database.
      */
-    @Autowired
-    private Firestore firestore;
+    private final Firestore firestore;
 
     /**
      * The name of the collection in Firestore where custom alerts are stored.
      */
     private static final String CUSTOM_ALERTS_COLLECTION = "custom_alerts";
+
+    /**
+     * Constructor for CustomAlertServiceImpl.
+     * @param firestore The Firestore instance used to interact with the database.
+     */
+    public CustomAlertServiceImpl(Firestore firestore) {
+        this.firestore = firestore;
+    }
 
     /**
      * Saves a custom alert to the Firestore database.
@@ -73,8 +78,8 @@ public class CustomAlertServiceImpl implements CustomAlertService {
                     .stream()
                     .map(doc -> CustomAlertMapper.toDTO(doc.getId(), doc.toObject(CustomAlert.class)))
                     .collect(Collectors.toList());
-        } catch (ExecutionException | InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException("Error retrieving custom alerts: " + e.getMessage());
         }
     }
 
@@ -92,8 +97,8 @@ public class CustomAlertServiceImpl implements CustomAlertService {
                     .get()
                     .get()
                     .toObjects(CustomAlert.class);
-        } catch (ExecutionException | InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException("Error retrieving custom alerts by sensor ID: " + e.getMessage());
         }
     }
 
@@ -112,8 +117,8 @@ public class CustomAlertServiceImpl implements CustomAlertService {
             } else {
                 throw new RuntimeException("Custom alert not found");
             }
-        } catch (ExecutionException | InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException("Error retrieving custom alert by ID: " + e.getMessage() + e);
         }
     }
 
@@ -134,8 +139,8 @@ public class CustomAlertServiceImpl implements CustomAlertService {
                     .stream()
                     .map(doc -> CustomAlertMapper.toDTO(doc.getId(), doc.toObject(CustomAlert.class)))
                     .collect(Collectors.toList());
-        } catch (ExecutionException | InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException("Error retrieving custom alerts by user ID: " + e.getMessage());
         }
     }
 
@@ -162,8 +167,8 @@ public class CustomAlertServiceImpl implements CustomAlertService {
 
             documentReference.delete().get();
             return CustomAlertMapper.toDTO(alertId,customAlert);
-        } catch (ExecutionException | InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException("Error deleting custom alert by ID: " + e.getMessage());
         }
     }
 
@@ -201,8 +206,8 @@ public class CustomAlertServiceImpl implements CustomAlertService {
             documentReference.set(currentAlert).get();
             return CustomAlertMapper.toDTO(alertId,currentAlert);
 
-        } catch (ExecutionException | InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException("Error updating custom alert: " + e.getMessage());
         }
     }
 

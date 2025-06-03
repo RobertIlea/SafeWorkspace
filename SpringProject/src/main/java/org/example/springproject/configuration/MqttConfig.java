@@ -10,6 +10,7 @@ import org.example.springproject.dto.UserDTO;
 import org.example.springproject.entity.*;
 import org.example.springproject.service.*;
 import org.example.springproject.util.AlertManager;
+import org.example.springproject.util.EncryptionService;
 import org.example.springproject.util.SensorMapper;
 import org.example.springproject.util.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,14 +45,16 @@ public class MqttConfig {
     private final CustomAlertService customAlertService;
     private final AlertManager alertManager;
     private final UserService userService;
+    private final TwilioService twilioService;
 
-    public MqttConfig(SensorService sensorService, RoomService roomService, AlertService alertService, CustomAlertService customAlertService, AlertManager alertManager, UserService userService) {
+    public MqttConfig(SensorService sensorService, RoomService roomService, AlertService alertService, CustomAlertService customAlertService, AlertManager alertManager, UserService userService, TwilioService twilioService) {
         this.sensorService = sensorService;
         this.roomService = roomService;
         this.alertService = alertService;
         this.customAlertService = customAlertService;
         this.alertManager = alertManager;
         this.userService = userService;
+        this.twilioService = twilioService;
     }
 
     @Bean
@@ -198,7 +201,7 @@ public class MqttConfig {
         }
     }
 
-    private void checkCustomAlerts(String roomId, SensorDTO sensorDTO) {
+    private void checkCustomAlerts(String roomId, SensorDTO sensorDTO) throws Exception {
         List<CustomAlert> customAlerts = customAlertService.getAllCustomAlertsBySensorId(sensorDTO.getId());
         UserDTO userDTO = userService.getUserByRoomId(roomId);
         User userFromDTO = UserMapper.toEntity(userDTO);
@@ -215,6 +218,20 @@ public class MqttConfig {
                         Alert alert = new Alert(roomId,sensorDTO.getId(),detail.getTimestamp(),sensorDTO.getSensorType(),data,customAlert.getMessage());
                         alertService.saveAlert(alert);
                         alertManager.sendEmail(userFromDTO,alert,sensorFromDTO);
+
+                        try{
+                            // Get user's phone number
+                            String userPhoneNumber = userService.getUserPhoneNumber(userDTO.getId());
+
+                            // Message the user
+                            String message = "Hello, " + userFromDTO.getName() + "\n" + customAlert.getMessage();
+                            twilioService.sendSms(userPhoneNumber,message);
+                            // Call the user
+                            twilioService.makeCall(userPhoneNumber);
+                        } catch (Exception e) {
+                            throw new RuntimeException("Couldn't contact the user!" + e);
+                        }
+
                         System.out.println("Custom alert saved");
                         System.out.println("@@@@@@@@@@@@@ END OF THE ALERT @@@@@@@@@@@@@");
                     }
@@ -234,7 +251,7 @@ public class MqttConfig {
         };
     }
 
-    private void processDataForRoom(SensorDTO sensorDTO, String roomId) {
+    private void processDataForRoom(SensorDTO sensorDTO, String roomId) throws Exception {
         System.out.println("Processing sensor data for room: " + roomId);
         System.out.println("Id of the sensor: " + sensorDTO.getId());
 
@@ -252,8 +269,8 @@ public class MqttConfig {
             sensorService.saveSensorData(sensorDTO);
             roomService.updateRoomWithSensorData(roomId, sensorDTO);
             System.out.println("Room " + roomId + " saved");
-        } catch (ExecutionException | InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to proccess data for room: " + roomId + e);
         }
     }
 
@@ -290,7 +307,11 @@ public class MqttConfig {
 
                     SensorDTO dht22SensorDTO = new SensorDTO(dhtSensorId,"DHT22",21, List.of(details));
                     System.out.println("Sensor id MQ5: " + dht22SensorDTO.getId());
-                    processDataForRoom(dht22SensorDTO,primaryRoomId);
+                    try {
+                        processDataForRoom(dht22SensorDTO,primaryRoomId);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 }
 
                 if(topic.equals(topicMq5)){
@@ -309,7 +330,11 @@ public class MqttConfig {
                     String mq5SensorId ="nv0MubTXWBrjHZpQlZxl";
 
                     SensorDTO mq5SensorDTO = new SensorDTO(mq5SensorId,"MQ5",0, List.of(details));
-                    processDataForRoom(mq5SensorDTO,primaryRoomId);
+                    try {
+                        processDataForRoom(mq5SensorDTO,primaryRoomId);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 }
 
                 if(topic.equals(topicEsp32x1)){
@@ -335,8 +360,12 @@ public class MqttConfig {
                     SensorDTO esp32x1Mq2SensorDTO = new SensorDTO(esp32x1Mq2SensorId,"MQ2",36,List.of(detailsMq2));
                     SensorDTO esp32x1Mq5SensorDTO = new SensorDTO(esp32x1Mq5SensorId,"MQ5",39,List.of(detailsMq5));
 
-                    processDataForRoom(esp32x1Mq2SensorDTO,esp32x1RoomId);
-                    processDataForRoom(esp32x1Mq5SensorDTO,esp32x1RoomId);
+                    try {
+                        processDataForRoom(esp32x1Mq2SensorDTO,esp32x1RoomId);
+                        processDataForRoom(esp32x1Mq5SensorDTO,esp32x1RoomId);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
 
                 }
                 if(topic.equals(topicEsp32x2)){
@@ -363,8 +392,12 @@ public class MqttConfig {
                     String dhtSensorId = "OpjcAjYNdCkMgEb2CV0T";
                     SensorDTO esp32x2Dht22SensorDTO = new SensorDTO(dhtSensorId,"DHT22",4,List.of(detailsDht22));
 
-                    processDataForRoom(esp32x2Mq2SensorDTO,esp32x2RoomId);
-                    processDataForRoom(esp32x2Dht22SensorDTO,esp32x2RoomId);
+                    try {
+                        processDataForRoom(esp32x2Mq2SensorDTO,esp32x2RoomId);
+                        processDataForRoom(esp32x2Dht22SensorDTO,esp32x2RoomId);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
 
                 }
 
