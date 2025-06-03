@@ -10,7 +10,6 @@ import org.example.springproject.dto.SensorDTO;
 import org.example.springproject.entity.Room;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 /**
  * RoomService interface provides methods to manage rooms, including adding, deleting, updating, and retrieving room information, as well as managing sensors associated with rooms.
@@ -21,9 +20,8 @@ public interface RoomService {
      * Adds a new room to the system.
      * @param room The room to be added.
      * @return The added room as a RoomDTO.
-     * @throws RuntimeException if an error occurs while adding the room.
      */
-    RoomDTO addRoom(Room room) throws RuntimeException;
+    RoomDTO addRoom(Room room);
 
     /**
      * Deletes a room by its ID.
@@ -87,10 +85,8 @@ public interface RoomService {
      * @param roomId The ID of the room to be updated.
      * @param sensorDTO The sensor data to be added to the room.
      * @return The updated room ID as a String.
-     * @throws ExecutionException if an error occurs during the update process.
-     * @throws InterruptedException if the thread is interrupted while waiting for the update to complete.
      */
-    String updateRoomWithSensorData(String roomId, SensorDTO sensorDTO) throws ExecutionException, InterruptedException;
+    String updateRoomWithSensorData(String roomId, SensorDTO sensorDTO);
 
     /**
      * Assigns a room to a user with the option to select sensors.

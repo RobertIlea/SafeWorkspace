@@ -16,13 +16,12 @@ import org.example.springproject.entity.Sensor;
 import org.example.springproject.service.RoomService;
 import org.example.springproject.util.RoomMapper;
 import org.example.springproject.util.SensorMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
+
 
 /**
  * RoomServiceImpl is a service class that implements the RoomService interface.
@@ -34,8 +33,7 @@ public class RoomServiceImpl implements RoomService {
     /**
      * Firestore instance used to interact with the Firestore database.
      */
-    @Autowired
-    private Firestore firestore;
+    private final Firestore firestore;
 
     /**
      * The name of the collection in Firestore where rooms are stored.
@@ -62,7 +60,6 @@ public class RoomServiceImpl implements RoomService {
      * @param firestore Firestore instance used to interact with the Firestore database.
      * @param sensorService SensorServiceImpl instance used to interact with sensors.
      */
-    @Autowired
     public RoomServiceImpl(Firestore firestore, SensorServiceImpl sensorService) {
         this.firestore = firestore;
         this.sensorService = sensorService;
@@ -105,9 +102,6 @@ public class RoomServiceImpl implements RoomService {
 
             return new RoomDTO(roomRef.getId(), SensorMapper.toDTOList(room.getSensors()), room.getName(), room.getUserId());
 
-        }catch (ExecutionException | InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Error during Firestore operation: " + e.getMessage(), e);
         } catch (Exception e) {
             throw new RuntimeException("Error while adding a room: " + e.getMessage(), e);
         }
@@ -135,9 +129,6 @@ public class RoomServiceImpl implements RoomService {
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> mapList = (List<Map<String, Object>>) roomSnapshot.get("sensors");
             return new RoomDTO(id,SensorMapper.toDTOListMap(mapList),room.getName(),room.getUserId());
-        }catch (ExecutionException | InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Error during Firestore operation: " + e.getMessage(), e);
         } catch (Exception e) {
             throw new RuntimeException("Error while deleting the room: " + e.getMessage(), e);
         }
@@ -167,9 +158,6 @@ public class RoomServiceImpl implements RoomService {
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> mapList = (List<Map<String, Object>>) roomSnapshot.get("sensors");
             return new RoomDTO(id,SensorMapper.toDTOListMap(mapList), currentRoom.getName(),currentRoom.getUserId());
-        }catch (ExecutionException | InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Error during Firestore operation: " + e.getMessage(), e);
         } catch (Exception e) {
             throw new RuntimeException("Error while updating the room: " + e.getMessage(), e);
         }
@@ -370,36 +358,38 @@ public class RoomServiceImpl implements RoomService {
      * @param roomId The ID of the room to be updated.
      * @param sensorDTO The SensorDTO object containing the sensor data to be updated.
      * @return A string representing the update time of the room.
-     * @throws ExecutionException if there is an error during the execution of the Firestore operation.
-     * @throws InterruptedException if the thread is interrupted while waiting for the Firestore operation to complete.
+     * @throws RuntimeException if there is an error while updating the room with sensor data.
      */
     @Override
-    public String updateRoomWithSensorData(String roomId, SensorDTO sensorDTO) throws ExecutionException, InterruptedException {
-        DocumentReference roomRef = firestore.collection(ROOM_COLLECTION).document(roomId);
-        ApiFuture<DocumentSnapshot> future = roomRef.get();
-        DocumentSnapshot roomSnapshot = future.get();
+    public String updateRoomWithSensorData(String roomId, SensorDTO sensorDTO) throws RuntimeException {
+        try{
+            DocumentReference roomRef = firestore.collection(ROOM_COLLECTION).document(roomId);
+            ApiFuture<DocumentSnapshot> future = roomRef.get();
+            DocumentSnapshot roomSnapshot = future.get();
 
-        if (!roomSnapshot.exists()) {
-            throw new RuntimeException("Room with id: " + roomId + " doesn't exist!");
-        }
-
-        RoomDTO roomDTO = roomSnapshot.toObject(RoomDTO.class);
-        if(roomDTO == null){
-            throw new RuntimeException("Failed to parse room data!");
-        }
-
-        List<SensorDTO> sensorsDTO = roomDTO.getSensors();
-
-        for (SensorDTO sensor : sensorsDTO) {
-            if (sensor.getId() != null && sensor.getId().equals(sensorDTO.getId())) {
-                sensor.setDetails(List.of(sensorDTO.getDetails().get(0)));
+            if (!roomSnapshot.exists()) {
+                throw new RuntimeException("Room with id: " + roomId + " doesn't exist!");
             }
+
+            RoomDTO roomDTO = roomSnapshot.toObject(RoomDTO.class);
+            if(roomDTO == null){
+                throw new RuntimeException("Failed to parse room data!");
+            }
+
+            List<SensorDTO> sensorsDTO = roomDTO.getSensors();
+
+            for (SensorDTO sensor : sensorsDTO) {
+                if (sensor.getId() != null && sensor.getId().equals(sensorDTO.getId())) {
+                    sensor.setDetails(List.of(sensorDTO.getDetails().get(0)));
+                }
+            }
+
+            roomDTO.setSensors(sensorsDTO);
+            WriteResult result = roomRef.set(roomDTO).get();
+            return result.getUpdateTime().toString();
+        }catch (Exception e){
+            throw new RuntimeException("Error while updating room with sensor data: " + e.getMessage(), e);
         }
-        System.out.println("Updating room with id: " + roomId);
-        System.out.println("Sensor id to be updated: " + sensorDTO.getId());
-        roomDTO.setSensors(sensorsDTO);
-        WriteResult result = roomRef.set(roomDTO).get();
-        return result.getUpdateTime().toString();
     }
 
     /**

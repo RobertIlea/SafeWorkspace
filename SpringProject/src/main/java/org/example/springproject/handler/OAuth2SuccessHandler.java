@@ -49,7 +49,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         if(user == null){
             String name = oAuth2User.getAttribute("name");
             String randomPassword = PasswordGenerator.generateRandomPassword(16);
-            userService.addUser(new User(name,email,randomPassword));
+            userService.addUser(new User(name,email,randomPassword,null));
         }
         UserDTO userDTO = new UserDTO();
         userDTO.setEmail(email);

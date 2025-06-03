@@ -11,11 +11,9 @@ import com.google.cloud.firestore.*;
 import org.example.springproject.dto.AlertDTO;
 import org.example.springproject.entity.Alert;
 import org.example.springproject.service.AlertService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 
 /**
  * AlertServiceImpl is a service class that implements the AlertService interface.
@@ -26,13 +24,20 @@ public class AlertServiceImpl implements AlertService {
     /**
      * Firestore instance used to interact with the Firestore database.
      */
-    @Autowired
-    private Firestore firestore;
+    private final Firestore firestore;
 
     /**
      * The name of the collection in Firestore where alerts are stored.
      */
     private static final String ALERT_COLLECTION = "alerts";
+
+    /**
+     * Constructor for AlertServiceImpl.
+     * @param firestore The Firestore instance used to interact with the database.
+     */
+    public AlertServiceImpl(Firestore firestore) {
+        this.firestore = firestore;
+    }
 
     /**
      * Saves an alert to the Firestore database.
@@ -104,32 +109,36 @@ public class AlertServiceImpl implements AlertService {
      * This method processes the QuerySnapshot returned by Firestore and converts it into a list of AlertDTO objects.
      * @param future The ApiFuture<QuerySnapshot> containing the results of the Firestore query.
      * @return A list of AlertDTO objects.
-     * @throws InterruptedException if the thread is interrupted while waiting for the future to complete.
-     * @throws ExecutionException if there is an error during the execution of the future.
+     * @throws RuntimeException if there is an error while processing the alert data.
      */
-    private List<AlertDTO> getAlertDTOS(ApiFuture<QuerySnapshot> future) throws InterruptedException, ExecutionException {
-        List<QueryDocumentSnapshot> documents = future.get().getDocuments();
-        List<AlertDTO> alertDTOList = new ArrayList<>();
+    private List<AlertDTO> getAlertDTOS(ApiFuture<QuerySnapshot> future) throws RuntimeException {
+        try {
+            List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+            List<AlertDTO> alertDTOList = new ArrayList<>();
 
 
-        for (QueryDocumentSnapshot document : documents) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> map = (Map<String, Object>) document.get("data");
-            Map<String, Float> sensorData = new HashMap<>();
-            if (map != null) {
-                for (Map.Entry<String, Object> entry : map.entrySet()) {
-                    Object value = entry.getValue();
-                    if (value instanceof Number) {
-                        sensorData.put(entry.getKey(), ((Number) value).floatValue());
-                    } else {
-                        System.out.println("Warning: Unexpected value type for key " + entry.getKey() + ": " + value);
+            for (QueryDocumentSnapshot document : documents) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> map = (Map<String, Object>) document.get("data");
+                Map<String, Float> sensorData = new HashMap<>();
+                if (map != null) {
+                    for (Map.Entry<String, Object> entry : map.entrySet()) {
+                        Object value = entry.getValue();
+                        if (value instanceof Number) {
+                            sensorData.put(entry.getKey(), ((Number) value).floatValue());
+                        } else {
+                            System.out.println("Warning: Unexpected value type for key " + entry.getKey() + ": " + value);
+                        }
                     }
                 }
-            }
-            AlertDTO alertDTO = new AlertDTO(document.getId(), document.getString("roomId"), document.getString("sensorId"), document.getTimestamp("timestamp"), document.getString("sensorType"), sensorData, document.getString("message"));
-            alertDTOList.add(alertDTO);
+                AlertDTO alertDTO = new AlertDTO(document.getId(), document.getString("roomId"), document.getString("sensorId"), document.getTimestamp("timestamp"), document.getString("sensorType"), sensorData, document.getString("message"));
+                alertDTOList.add(alertDTO);
 
+            }
+            return alertDTOList;
+
+        }catch (Exception e) {
+            throw new RuntimeException("Error processing alert data: " + e.getMessage(), e);
         }
-        return alertDTOList;
     }
 }

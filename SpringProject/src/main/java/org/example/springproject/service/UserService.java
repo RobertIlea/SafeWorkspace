@@ -22,7 +22,7 @@ public interface UserService {
      * @return UserDTO containing the details of the added user.
      * @throws RuntimeException if an error occurs during the addition of the user.
      */
-    UserDTO addUser(User user) throws RuntimeException;
+    UserDTO addUser(User user);
 
     /**
      * Deletes a user by their ID.
@@ -30,7 +30,7 @@ public interface UserService {
      * @return UserDTO containing the details of the deleted user.
      * @throws RuntimeException if an error occurs during the deletion of the user.
      */
-    UserDTO deleteUserById(String id) throws RuntimeException;
+    UserDTO deleteUserById(String id);
 
     /**
      * Updates an existing user.
@@ -73,4 +73,8 @@ public interface UserService {
      * @return UserDTO containing the details of the user.
      */
     UserDTO getUserByRoomId(String roomId);
+
+    void updateUserPhone(String userId, String phone);
+
+    String getUserPhoneNumber(String userId);
 }
