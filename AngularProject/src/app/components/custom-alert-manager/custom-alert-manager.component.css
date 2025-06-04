@@ -1,8 +1,67 @@
 table {
   width: 100%;
+  table-layout: fixed;
   margin-top: 20px;
 }
 
+.mat-header-cell, .mat-cell {
+  text-align: center;
+  padding: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mat-header-row, .mat-row {
+  display: table-row;
+}
+
+.mat-column-parameter {
+  width: 15%;
+}
+.mat-column-condition {
+  width: 10%;
+}
+.mat-column-message {
+  width: 20%;
+}
+.mat-column-roomId {
+  width: 15%;
+}
+.mat-column-sensorId {
+  width: 10%;
+}
+.mat-column-actions {
+  width: 20%;
+}
+
+.mat-row {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.message-text {
+  display: inline-block;
+  cursor: pointer;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  transition: all 0.3s ease;
+  max-width: 100%;
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.message-text.collapsed {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.message-text.expanded {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: initial;
+}
 .no-alerts {
   margin-top: 20px;
   text-align: center;
@@ -26,14 +85,10 @@ mat-form-field {
 }
 
 .mat-column-actions {
-  display: flex;
   gap: 8px;
   justify-content: center;
 }
 
-.mat-header-cell, .mat-cell {
-  text-align: center;
-}
 .mat-elevation-z2 {
   border-radius: 8px;
   overflow: hidden;

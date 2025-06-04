@@ -40,6 +40,7 @@ export class DashboardComponent implements OnInit, OnDestroy{
   private chartSub: Subscription | null = null;
   private roomUpdateSub: Subscription | null = null;
   private allRoomsSub: Subscription | null = null;
+  today: Date = new Date();
 
   constructor(
     private roomService: RoomService,
@@ -58,6 +59,11 @@ export class DashboardComponent implements OnInit, OnDestroy{
     this.roomUpdateSub?.unsubscribe();
     this.allRoomsSub?.unsubscribe();
     this.chartSub?.unsubscribe();
+  }
+
+  isToday(date: Date): boolean {
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
   }
 
   getGasLevelMessage(value: number): string {
@@ -85,10 +91,11 @@ export class DashboardComponent implements OnInit, OnDestroy{
   get_rooms(): void {
     this.roomService.get_rooms().subscribe({
       next: (room: Room[]) => {
+        if(!room || room.length === 0) {
+          room = [];
+        }
         this.rooms = room;
         this.roomService.setRooms(room);
-        console.log("Rooms: " , this.rooms[0]);
-        console.log("Sensors: ", this.rooms[0].sensors);
 
         if(this.rooms.length > 0){
           if(!this.selectedRoom) {
@@ -149,7 +156,6 @@ export class DashboardComponent implements OnInit, OnDestroy{
           return updatedRoom ? updatedRoom : oldRoom;
         });
 
-        // Compară shallow referințele la camere
         const hasChanged = newRooms.some((room, index) => room !== this.rooms[index]);
 
         if (hasChanged) {
@@ -279,37 +285,20 @@ export class DashboardComponent implements OnInit, OnDestroy{
     return color;
   }
 
-  updateSensorDetailsInRooms(sensorId: string, details: Details[]) {
-    const roomIndex = this.rooms.findIndex(room => {
-      return room.sensors && room.sensors.some(sensor => sensor.id === sensorId);
-    });
-
-    if(roomIndex !== -1) {
-      const sensorIndex = this.rooms[roomIndex].sensors?.findIndex(sensor => sensor.id === sensorId);
-
-      if(sensorIndex !== -1) {
-        this.rooms[roomIndex].sensors![sensorIndex!].details = [...details];
-        this.rooms = [...this.rooms];
-        this.roomService.setRooms([...this.rooms]);
-      }
-    }
-  }
-
   prepare_chart_data(){
     if(!this.selectedSensor?.id) return;
 
     const selectedId = this.selectedSensor.id;
     const selectedDay = this.selectedDate.toDateString();
 
-    console.log("Fetching data for: ", selectedDay);
-
     this.chartSub?.unsubscribe();
     this.roomUpdateSub?.unsubscribe();
 
     // Subscription for the chart data (only for the selected sensor)
-    this.chartSub = interval(5000).pipe(
-      startWith(0),
-      switchMap(() => this.sensorService.get_sensor_data_by_date(selectedId, selectedDay))
+    if(this.isToday(this.selectedDate)){
+      this.chartSub = interval(5000).pipe(
+        startWith(0),
+        switchMap(() => this.sensorService.get_sensor_data_by_date(selectedId, selectedDay))
       ).subscribe({
         next: (details: Details[]) => {
           this.process_chart_data(details);
@@ -318,24 +307,25 @@ export class DashboardComponent implements OnInit, OnDestroy{
           console.error('Error fetching data for: ', err);
           this.reset_chart();
         }
-    });
+      });
+    }else{
+      this.fetchSensorDataByDate(selectedId, selectedDay);
+    }
+ }
 
-    // Fetch for ngOnInit() //
-    this.sensorService.get_sensor_data_by_date(selectedId, selectedDay).subscribe({
+  fetchSensorDataByDate(selectedId: string, selectedDay: string) {
+    this.chartSub = this.sensorService.get_sensor_data_by_date(selectedId, selectedDay).subscribe({
       next: (details: Details[]) => {
         this.process_chart_data(details);
-        this.updateSensorDetailsInRooms(selectedId, details);
-        console.log("Details of the selected sensor: ", details);
       },
       error: (err) => {
-        console.error("Error fetching data:", err);
+        console.error('Error fetching data for: ', err);
         this.reset_chart();
       }
     });
+  }
 
- }
-
- process_chart_data(details: Details[]){
+  process_chart_data(details: Details[]){
   const validDetails = details
         .filter(d => d.timestamp && d.data)
         .sort((a, b) => (a.timestamp!.seconds - b.timestamp!.seconds));

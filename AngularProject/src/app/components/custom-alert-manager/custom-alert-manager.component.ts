@@ -20,7 +20,7 @@ export class CustomAlertManagerComponent implements OnInit {
   uniqueRooms: { id: string, name: string }[] = [];
   roomNamesMap: { [roomId: string]: string } = {};
   sensorTypesMap: { [sensorId: string]: string } = {};
-
+  expandedText: { [id: string]: boolean } = {};
 
   constructor(private customAlertService: CustomAlertService, private dialog: MatDialog, private roomService: RoomService) { }
 
@@ -29,6 +29,14 @@ export class CustomAlertManagerComponent implements OnInit {
       this.buildRoomAndSensorMaps(rooms);
       this.fetchAlerts();
     });
+  }
+
+  isExpanded(id: string): boolean {
+    return this.expandedText[id];
+  }
+
+  toggleExpand(id: string): void {
+    this.expandedText[id] = !this.expandedText[id];
   }
 
   buildRoomAndSensorMaps(rooms: Room[]) {
@@ -47,8 +55,11 @@ export class CustomAlertManagerComponent implements OnInit {
   }
 
   fetchAlerts() {
-    this.customAlertService.get_all_custom_alerts().subscribe({
+    this.customAlertService.get_all_custom_alerts_based_on_logged_user().subscribe({
       next: (alerts: CustomAlert[]) => {
+        if(!alerts || alerts.length === 0) {
+          alerts = [];
+        }
         this.customAlerts = alerts;
         this.filteredAlerts = alerts;
 
@@ -58,6 +69,9 @@ export class CustomAlertManagerComponent implements OnInit {
           .map(a => ({ id: a.roomId!, name: this.roomNamesMap[a.roomId!] || 'Room ' + a.roomId!.substring(0, 5) }));
       },
       error: (err) => {
+        if(err.status === 404) {
+          this.customAlerts = this.customAlerts.filter(alert => alert.roomId !== this.selectedRoomId);
+        }
         console.error('Failed to load custom alerts:', err);
       }
     });

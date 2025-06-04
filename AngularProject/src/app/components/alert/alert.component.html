@@ -1,13 +1,14 @@
 <div class="alert-container">
-  <mat-form-field appearance="fill">
+  <mat-form-field appearance="outline">
     <mat-label>Select date</mat-label>
-    <input matInput [matDatepicker]="picker" [(ngModel)]="selectedDate" (dateChange)="onDateChange($event.value)">
+    <input matInput [matDatepicker]="picker" [(ngModel)]="selectedDate" (dateChange)="onDateChange($event.value)" [max]="today">
     <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
     <mat-datepicker #picker></mat-datepicker>
   </mat-form-field>
 
   <div *ngIf="cameraAlerts.length === 0" class="no-alerts-message">
-    No alerts found
+  <mat-icon>info</mat-icon>
+    No alerts found.
   </div>
   <div *ngFor="let room of cameraAlerts; trackBy: trackByRoomId" class="alert-card" (click)="openAlertDetails(room)">
   <div class="alert-title">

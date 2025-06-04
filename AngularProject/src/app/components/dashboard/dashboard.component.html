@@ -35,18 +35,64 @@
           </div>
         </mat-card-content>
       </mat-card>
-
-      <mat-card class="card manage-alerts-card" [@cardAnimation]>
+      <mat-card class="card sensors-history-card" [@cardAnimation]>
         <mat-card-title class="list-title">
-          <mat-icon style="vertical-align: middle; margin-right: 6px;">notifications_active</mat-icon>
-          Manage My Alerts
-          <p style="font-size: 0.9rem;">Here you can view, edit or delete your custom alerts based on selected room/sensor.</p>
+          <mat-icon style="vertical-align: middle; margin-right: 6px;">dataset</mat-icon>
+          Sensors history
+          <p style="font-size: 0.9rem;">Here you can view sensors history on a selected day.</p>
         </mat-card-title>
+        <ng-container *ngIf="rooms.length > 0; else noRoomsAvailable">
+          <mat-card-content class="sensor-history-content">
 
-        <mat-card-content class="custom-alerts-content">
-          <app-custom-alert-manager></app-custom-alert-manager>
-        </mat-card-content>
+            <div class="form-fields">
+              <mat-form-field appearance="outline">
+                <mat-label>Select room</mat-label>
+                <mat-select [(value)]="selectedRoom" [compareWith]="compareRooms" (selectionChange)="select_room($event.value)">
+                  <mat-option *ngFor="let room of rooms" [value]="room">{{ room.name }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" *ngIf="selectedRoom">
+                <mat-label>Select sensor</mat-label>
+                <mat-select [(value)]="selectedSensor" (selectionChange)="select_sensor($event.value)">
+                  <mat-option *ngFor="let sensor of selectedRoom.sensors" [value]="sensor">{{ sensor.sensorType }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" *ngIf="selectedSensor">
+                <mat-label>Select date</mat-label>
+                <input matInput [matDatepicker]="picker" placeholder="Choose a date" [(ngModel)]="selectedDate" (dateChange)="selected_date($event.value)" [max]="today">
+                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+              </mat-form-field>
+            </div>
+
+            <div class="chart-container" *ngIf="selectedSensor">
+              <ng-container *ngIf="chartData && chartData.datasets.length > 0; else noDataAvailable">
+                <canvas baseChart
+                        [data]="chartData"
+                        [options]="chartOptions"
+                        [type]="'line'">
+                  #realTimeChart={{chartData}}
+                </canvas>
+              </ng-container>
+              <ng-template #noDataAvailable>
+                <div class="no-data-message">
+                  <mat-icon>info</mat-icon>
+                  No data available for the selected date.
+                </div>
+              </ng-template>
+            </div>
+          </mat-card-content>
+        </ng-container>
+        <ng-template #noRoomsAvailable>
+          <mat-card-content class="no-data-message">
+            <mat-icon>info</mat-icon>
+            No rooms available. Please add a room first.
+          </mat-card-content>
+        </ng-template>
       </mat-card>
+
 
     </div>
   <div class="row">
@@ -59,51 +105,18 @@
       <app-alert [rooms]="rooms"></app-alert>
     </mat-card>
 
-
-    <mat-card class="card sensors-history-card" [@cardAnimation]>
+    <mat-card class="card manage-alerts-card" [@cardAnimation]>
       <mat-card-title class="list-title">
-        <mat-icon style="vertical-align: middle; margin-right: 6px;">dataset</mat-icon>
-        Sensors history
-        <p style="font-size: 0.9rem;">Here you can view sensors history on a selected day.</p>
+        <mat-icon style="vertical-align: middle; margin-right: 6px;">notifications_active</mat-icon>
+        Manage My Alerts
+        <p style="font-size: 0.9rem;">Here you can view, edit or delete your custom alerts based on selected room/sensor.</p>
       </mat-card-title>
-      <mat-card-content class="sensor-history-content">
 
-        <div class="form-fields">
-          <mat-form-field appearance="outline">
-            <mat-label>Select room</mat-label>
-            <mat-select [(value)]="selectedRoom" [compareWith]="compareRooms" (selectionChange)="select_room($event.value)">
-            <mat-option *ngFor="let room of rooms" [value]="room">{{ room.name }}</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" *ngIf="selectedRoom">
-            <mat-label>Select sensor</mat-label>
-            <mat-select [(value)]="selectedSensor" (selectionChange)="select_sensor($event.value)">
-              <mat-option *ngFor="let sensor of selectedRoom.sensors" [value]="sensor">{{ sensor.sensorType }}</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" *ngIf="selectedSensor">
-            <mat-label>Select date</mat-label>
-            <input matInput [matDatepicker]="picker" placeholder="Choose a date" [(ngModel)]="selectedDate" (dateChange)="selected_date($event.value)">
-            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-            <mat-datepicker #picker></mat-datepicker>
-          </mat-form-field>
-        </div>
-
-
-        <div class="chart-container" *ngIf="selectedSensor">
-          <canvas baseChart
-                  [data]="chartData"
-                  [options]="chartOptions"
-                  [type]="'line'">
-            #realTimeChart={{chartData}}
-
-          </canvas>
-        </div>
+      <mat-card-content class="custom-alerts-content">
+        <app-custom-alert-manager></app-custom-alert-manager>
       </mat-card-content>
-
     </mat-card>
+
   </div>
 </main>
 
