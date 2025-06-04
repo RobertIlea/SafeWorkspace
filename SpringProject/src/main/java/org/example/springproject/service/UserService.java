@@ -74,7 +74,17 @@ public interface UserService {
      */
     UserDTO getUserByRoomId(String roomId);
 
+    /**
+     * Updates the phone number of a user.
+     * @param userId The ID of the user whose phone number is to be updated.
+     * @param phone The new phone number to be set for the user.
+     */
     void updateUserPhone(String userId, String phone);
 
+    /**
+     * Retrieves the phone number of a user by their user ID.
+     * @param userId The ID of the user whose phone number is to be retrieved.
+     * @return String containing the user's phone number.
+     */
     String getUserPhoneNumber(String userId);
 }

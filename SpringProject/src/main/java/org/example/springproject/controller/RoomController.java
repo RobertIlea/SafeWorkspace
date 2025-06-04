@@ -9,6 +9,7 @@ import org.example.springproject.dto.RoomDTO;
 import org.example.springproject.dto.SensorDTO;
 import org.example.springproject.entity.Room;
 import org.example.springproject.exception.CreationException;
+import org.example.springproject.exception.EmptyResultException;
 import org.example.springproject.exception.ObjectNotFound;
 import org.example.springproject.service.JwtService;
 import org.example.springproject.service.RoomService;
@@ -51,7 +52,7 @@ public class RoomController {
      * @throws ObjectNotFound if the room list is empty or not found for the user
      */
     @GetMapping("/")
-    public ResponseEntity<List<RoomDTO>> getRooms(@RequestHeader("Authorization") String token) throws ObjectNotFound {
+    public ResponseEntity<List<RoomDTO>> getRooms(@RequestHeader("Authorization") String token) throws ObjectNotFound, EmptyResultException {
         String jwtToken = token.substring(7); // Remove "Bearer " prefix
         String email = jwtService.extractEmail(jwtToken);
 
@@ -62,7 +63,7 @@ public class RoomController {
         List<RoomDTO> rooms = roomService.getRoomsByUserEmail(email);
 
         if (rooms == null || rooms.isEmpty()) {
-            throw new ObjectNotFound("Room list is empty or not found for user with email: " + email);
+            throw new EmptyResultException("Room list is empty or not found for user with email: " + email);
         }
 
         return new ResponseEntity<>(rooms, HttpStatus.OK);
@@ -88,14 +89,14 @@ public class RoomController {
     /**
      * This method handles GET requests to retrieve all available rooms.
      * @return ResponseEntity containing a list of available RoomDTO objects
-     * @throws ObjectNotFound if no available rooms are found
+     * @throws EmptyResultException if no available rooms are found
      */
     @GetMapping("/available")
-    public ResponseEntity<List<RoomDTO>> getAvailableRooms() throws ObjectNotFound {
+    public ResponseEntity<List<RoomDTO>> getAvailableRooms() throws EmptyResultException {
         List<RoomDTO> rooms = roomService.getAvailableRooms();
 
         if(rooms == null || rooms.isEmpty()) {
-            throw new ObjectNotFound("No available rooms found!");
+            throw new EmptyResultException("No available rooms found!");
         }
 
         return new ResponseEntity<>(rooms, HttpStatus.OK);

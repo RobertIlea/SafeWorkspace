@@ -1,6 +1,7 @@
 package org.example.springproject.handler;
 
 import org.example.springproject.exception.CreationException;
+import org.example.springproject.exception.EmptyResultException;
 import org.example.springproject.exception.ObjectNotFound;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,11 @@ public class GeneralExceptionHandler {
     @ExceptionHandler(CreationException.class)
     public ResponseEntity<String> handleCreationException(CreationException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+
+    @ExceptionHandler(EmptyResultException.class)
+    public ResponseEntity<String> handleEmptyResultException(EmptyResultException e) {
+        return ResponseEntity.noContent().build();
     }
 
 }
