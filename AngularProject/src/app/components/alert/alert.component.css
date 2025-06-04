@@ -48,8 +48,12 @@
 }
 
 .no-alerts-message {
+  margin-top: 20px;
   text-align: center;
   color: #888;
   font-style: italic;
-  margin-top: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }

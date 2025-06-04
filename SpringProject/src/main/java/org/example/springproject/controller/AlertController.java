@@ -8,6 +8,7 @@ package org.example.springproject.controller;
 import org.example.springproject.dto.AlertDTO;
 import org.example.springproject.entity.Alert;
 import org.example.springproject.exception.CreationException;
+import org.example.springproject.exception.EmptyResultException;
 import org.example.springproject.exception.ObjectNotFound;
 import org.example.springproject.service.AlertService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,14 +58,14 @@ public class AlertController {
      * This method handles GET requests to retrieve alerts by room ID.
      * @param roomId the ID of the room for which to retrieve alerts
      * @return ResponseEntity containing a list of AlertDTO objects
-     * @throws ObjectNotFound if no alerts are found for the specified room ID
+     * @throws EmptyResultException if no alerts are found for the specified room ID
      */
     @GetMapping("/{roomId}")
-    public ResponseEntity<List<AlertDTO>> getAlerts(@PathVariable("roomId") String roomId) throws ObjectNotFound {
+    public ResponseEntity<List<AlertDTO>> getAlerts(@PathVariable("roomId") String roomId) throws EmptyResultException {
         List<AlertDTO> alertDTOs = alertService.getAlerts(roomId);
 
         if(alertDTOs == null || alertDTOs.isEmpty()) {
-            throw new ObjectNotFound("No alerts found for room with ID: " + roomId);
+            throw new EmptyResultException("No alerts found for room with ID: " + roomId);
         }
 
         return new ResponseEntity<>(alertDTOs, HttpStatus.OK);
@@ -78,7 +79,7 @@ public class AlertController {
      * @throws ObjectNotFound if no alerts are found for the specified room ID and date
      */
     @GetMapping("/{roomId}/data/{date}")
-    public ResponseEntity<List<AlertDTO>> getAlertsByRoomAndDate(@PathVariable("roomId") String roomId, @PathVariable("date") String date) throws ObjectNotFound {
+    public ResponseEntity<List<AlertDTO>> getAlertsByRoomAndDate(@PathVariable("roomId") String roomId, @PathVariable("date") String date) throws ObjectNotFound, EmptyResultException {
         // Validate the date format (YYYY-MM-DD)
         if (!date.matches("\\d{4}-\\d{2}-\\d{2}")) {
             throw new ObjectNotFound("Invalid date format. Expected format: YYYY-MM-DD");
@@ -90,7 +91,7 @@ public class AlertController {
         List<AlertDTO> alertDTOList = alertService.getAlertsByRoomAndDate(roomId,selectedDate);
 
         if(alertDTOList == null || alertDTOList.isEmpty()) {
-            throw new ObjectNotFound("No alerts found for room with ID: " + roomId + " on date: " + date);
+            throw new EmptyResultException("No alerts found for room with ID: " + roomId + " on date: " + date);
         }
 
         return new ResponseEntity<>(alertDTOList, HttpStatus.OK);

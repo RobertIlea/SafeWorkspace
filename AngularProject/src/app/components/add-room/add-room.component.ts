@@ -74,12 +74,10 @@ export class AddRoomComponent implements OnInit{
     this.userService.get_user_id_by_email(email).subscribe({
       next: (data: string) => {
         this.userId = data;
-        console.log("User id that is connected: " , this.userId);
       },
       error: (err) => {
         console.warn("Couldn't get the id from the connected user: " , err);
       }
-
     })
   }
   // --------------------------------- //
@@ -121,11 +119,12 @@ export class AddRoomComponent implements OnInit{
 
   // GETTING THE AVAILABLE ROOMS FROM FIRESTORE //
   get_available_rooms(){
-    console.log("Getting the available rooms from firestore...");
     this.roomService.get_available_rooms().subscribe({
       next: (data: Room[]) => {
+        if (!data || data.length === 0) {
+          data = [];
+        }
         this.availableRooms = data;
-        console.log("Available rooms: " , this.availableRooms);
       },
       error: (err) => {
         console.warn("Error while fetching the available rooms: " , err)

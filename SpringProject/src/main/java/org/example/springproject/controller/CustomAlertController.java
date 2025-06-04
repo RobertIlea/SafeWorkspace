@@ -7,9 +7,13 @@ package org.example.springproject.controller;
 
 import org.example.springproject.dto.CustomAlertDTO;
 import org.example.springproject.entity.CustomAlert;
+import org.example.springproject.entity.User;
 import org.example.springproject.exception.CreationException;
+import org.example.springproject.exception.EmptyResultException;
 import org.example.springproject.exception.ObjectNotFound;
 import org.example.springproject.service.CustomAlertService;
+import org.example.springproject.service.JwtService;
+import org.example.springproject.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +36,18 @@ public class CustomAlertController {
      */
     @Autowired
     private CustomAlertService customAlertService;
+
+    /**
+     * The JwtService is injected to handle JWT-related operations.
+     */
+    @Autowired
+    private JwtService jwtService;
+
+    /**
+     * The UserService is injected to handle user-related operations.
+     */
+    @Autowired
+    private UserService userService;
 
     /**
      * This method handles POST requests to create a new custom alert.
@@ -70,14 +86,27 @@ public class CustomAlertController {
     /**
      * This method handles GET requests to retrieve all custom alerts.
      * @return ResponseEntity containing a list of CustomAlertDTO objects
-     * @throws ObjectNotFound if no custom alerts are found
+     * @throws ObjectNotFound if the email is not found in the JWT token
+     * @throws EmptyResultException if the custom alerts list is empty
      */
     @GetMapping("/")
-    public ResponseEntity<List<CustomAlertDTO>> getAllCustomAlerts() throws ObjectNotFound {
-        List<CustomAlertDTO> customAlertDTOs = customAlertService.getAllCustomAlerts();
+    public ResponseEntity<List<CustomAlertDTO>> getAllCustomAlerts(@RequestHeader("Authorization") String token) throws ObjectNotFound, EmptyResultException {
+        String jwtToken = token.substring(7); // Remove "Bearer " prefix
+        String email = jwtService.extractEmail(jwtToken);
+
+        if (email == null || email.isEmpty()) {
+            throw new ObjectNotFound("Email not found in token");
+        }
+        String userId = userService.getUserIdByEmail(email);
+
+        if(userId == null || userId.isEmpty()) {
+            throw new ObjectNotFound("User ID not found for email: " + email);
+        }
+
+        List<CustomAlertDTO> customAlertDTOs = customAlertService.getCustomAlertsByUserId(userId);
 
         if(customAlertDTOs == null || customAlertDTOs.isEmpty()) {
-            throw new ObjectNotFound("No custom alerts found");
+            throw new EmptyResultException("No custom alerts found");
         }
 
         return new ResponseEntity<>(customAlertDTOs, HttpStatus.OK);
@@ -87,14 +116,14 @@ public class CustomAlertController {
      * This method handles GET requests to retrieve a custom alert by its ID.
      * @param id the ID of the custom alert to retrieve
      * @return ResponseEntity containing the CustomAlertDTO object
-     * @throws ObjectNotFound if the custom alert with the specified ID is not found
+     * @throws EmptyResultException if the custom alert is not found or is null
      */
     @GetMapping("{id}")
-    public ResponseEntity<CustomAlertDTO> getCustomAlertById(@PathVariable String id) throws ObjectNotFound {
+    public ResponseEntity<CustomAlertDTO> getCustomAlertById(@PathVariable String id) throws EmptyResultException {
         CustomAlertDTO customAlertDTO = customAlertService.getCustomAlertById(id);
 
         if(customAlertDTO == null) {
-            throw new ObjectNotFound("Custom alert with ID " + id + " not found");
+            throw new EmptyResultException("Custom alert is null or not found with ID: " + id);
         }
 
         return new ResponseEntity<>(customAlertDTO, HttpStatus.OK);

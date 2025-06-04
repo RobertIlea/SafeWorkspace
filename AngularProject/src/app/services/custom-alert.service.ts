@@ -16,8 +16,13 @@ export class CustomAlertService {
     return this.http.post<CustomAlert>(`${BASE_URL}/custom-alert/`, alert);
   }
 
-  get_all_custom_alerts(): Observable<CustomAlert[]> {
-    return this.http.get<CustomAlert[]>(`${BASE_URL}/custom-alert/`);
+  get_all_custom_alerts_based_on_logged_user(): Observable<CustomAlert[]> {
+    const token = localStorage.getItem('jwtToken');
+    return this.http.get<CustomAlert[]>(`${BASE_URL}/custom-alert/`,{
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
   }
 
   get_custom_alert_by_user_id(userId: string): Observable<CustomAlert[]> {

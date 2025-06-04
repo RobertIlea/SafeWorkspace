@@ -1,6 +1,6 @@
 <h2 mat-dialog-title>Add new room</h2>
 
-<mat-dialog-content>
+<mat-dialog-content *ngIf="availableRooms.length > 0; else noRoomsAvailable">
   <mat-form-field appearance="fill" style="width: 100%;">
     <mat-label>New Room Name</mat-label>
     <input matInput [(ngModel)]="newRoomName">
@@ -28,7 +28,17 @@
   <mat-error *ngIf="errorMessage">{{ errorMessage }}</mat-error>
 </mat-dialog-content>
 
-<mat-dialog-actions align="end">
+<mat-dialog-actions align="end" *ngIf="availableRooms.length > 0">
   <button mat-button (click)="close_dialog()">Cancel</button>
   <button mat-button color="primary" (click)="assign_room_to_user()">Add</button>
 </mat-dialog-actions>
+
+<ng-template #noRoomsAvailable>
+  <div class="no-rooms">
+    <mat-icon>info</mat-icon>
+    <p>All rooms are already assigned.</p>
+  </div>
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="close_dialog()">Close</button>
+  </mat-dialog-actions>
+</ng-template>
