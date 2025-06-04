@@ -98,7 +98,6 @@ public class CustomAlertServiceImplTest {
         verify(collectionReference).document();
         verify(documentReference).set(customAlert);
         verify(writeResultFuture).get();
-        System.out.println("Test for shouldSaveCustomAlert() was successful!");
     }
 
     /**

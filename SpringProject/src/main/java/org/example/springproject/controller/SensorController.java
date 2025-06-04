@@ -1,8 +1,15 @@
+/**
+ * SensorController.java
+ * This file represents the REST controller for managing sensor-related operations.
+ * @author Ilea Robert-Ioan
+ */
 package org.example.springproject.controller;
 
 import org.example.springproject.dto.SensorDTO;
 import org.example.springproject.entity.Details;
 import org.example.springproject.entity.Sensor;
+import org.example.springproject.exception.CreationException;
+import org.example.springproject.exception.ObjectNotFound;
 import org.example.springproject.service.SensorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,128 +19,154 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * SensorController handles HTTP requests related to sensor operations.
+ * It is marked with @RestController to indicate that it is a REST-ful controller.
+ * It is mapped to the "/sensor" URL path and allows cross-origin requests from "<a href="http://localhost:4200">localhost:4200</a>".
+ */
 @RestController
 @RequestMapping("/sensor")
 @CrossOrigin(origins = "http://localhost:4200")
-
 public class SensorController {
+
+    /**
+     * The SensorService is injected to handle business logic related to sensors.
+     */
     @Autowired
     private SensorService sensorService;
 
+    /**
+     * This method handles GET requests to retrieve a sensor by its ID.
+     * @param sensorId the ID of the sensor to retrieve
+     * @return ResponseEntity containing the SensorDTO object
+     * @throws ObjectNotFound if the sensor with the specified ID is not found
+     */
     @GetMapping("/{sensorId}")
-    public ResponseEntity<SensorDTO> getSensorById(@PathVariable String sensorId){
-        try{
-            SensorDTO sensorDTO = sensorService.getSensorById(sensorId);
-            return ResponseEntity.ok(sensorDTO);
-        }catch (Exception e){
-            return ResponseEntity.badRequest().body(new SensorDTO());
+    public ResponseEntity<SensorDTO> getSensorById(@PathVariable String sensorId) throws ObjectNotFound {
+        SensorDTO sensorDTO = sensorService.getSensorById(sensorId);
+
+        if(sensorDTO == null) {
+            throw new ObjectNotFound("Sensor with ID " + sensorId + " not found!");
         }
+
+        return new ResponseEntity<>(sensorDTO, HttpStatus.OK);
+
     }
 
+    /**
+     * This method handles GET requests to retrieve all sensors.
+     * @return ResponseEntity containing a list of SensorDTO objects
+     * @throws ObjectNotFound if the sensor list is empty or not found
+     */
     @GetMapping("/")
-    public ResponseEntity<List<SensorDTO>> getSensors(){
-        try{
-            List<SensorDTO> sensors = sensorService.getSensors();
-            return ResponseEntity.ok(sensors);
-        }catch (RuntimeException e) {
-            List<SensorDTO> errorList = new ArrayList<>();
-            SensorDTO errorDTO = new SensorDTO();
-            errorList.add(errorDTO);
-            return ResponseEntity.badRequest().body(errorList);
-        } catch (Exception e) {
-            List<SensorDTO> errorList = new ArrayList<>();
-            SensorDTO errorDTO = new SensorDTO();
-            errorList.add(errorDTO);
-            return new ResponseEntity<>(errorList, HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<List<SensorDTO>> getSensors() throws ObjectNotFound {
+        List<SensorDTO> sensors = sensorService.getSensors();
+
+        if(sensors == null || sensors.isEmpty()) {
+            throw new ObjectNotFound("Sensor list is empty or not found!");
         }
+
+        return new ResponseEntity<>(sensors, HttpStatus.OK);
+
     }
 
+    /**
+     * This method handles POST requests to add a new sensor.
+     * @param sensor the Sensor object to be added
+     * @return ResponseEntity containing the created SensorDTO object
+     * @throws CreationException if the sensor could not be created
+     */
     @PostMapping("/")
-    public ResponseEntity<SensorDTO> addSensor(@RequestBody Sensor sensor){
-        try{
-            SensorDTO sensorDTO = sensorService.addSensor(sensor);
-            return ResponseEntity.ok(sensorDTO);
-        }catch (RuntimeException e){
-            SensorDTO errorDTO = new SensorDTO();
-            return ResponseEntity.badRequest().body(errorDTO);
-        }catch (Exception e){
-            SensorDTO errorDTO = new SensorDTO();
-            return new ResponseEntity<>(errorDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<SensorDTO> addSensor(@RequestBody Sensor sensor) throws CreationException {
+        SensorDTO sensorDTO = sensorService.addSensor(sensor);
+
+        if(sensorDTO == null) {
+            throw new CreationException("Sensor could not be created because it's null!");
         }
+
+        return new ResponseEntity<>(sensorDTO, HttpStatus.CREATED);
     }
 
+    /**
+     * This method handles DELETE requests to remove a sensor by its ID.
+     * @param id the ID of the sensor to delete
+     * @return ResponseEntity containing the deleted SensorDTO object
+     * @throws ObjectNotFound if the sensor with the specified ID is not found
+     */
     @DeleteMapping("/{id}")
-    public ResponseEntity<SensorDTO> deleteSensor(@PathVariable String id){
-        try{
-            SensorDTO sensorDTO = sensorService.deleteSensorById(id);
-            return ResponseEntity.ok(sensorDTO);
-        }catch (RuntimeException e){
-            SensorDTO errorDTO = new SensorDTO();
-            return ResponseEntity.badRequest().body(errorDTO);
-        }catch (Exception e){
-            SensorDTO errorDTO = new SensorDTO();
-            return new ResponseEntity<>(errorDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<SensorDTO> deleteSensor(@PathVariable String id) throws ObjectNotFound {
+        SensorDTO sensorDTO = sensorService.deleteSensorById(id);
+
+        if(sensorDTO == null) {
+            throw new ObjectNotFound("Sensor with ID " + id + " not found!");
         }
+
+        return new ResponseEntity<>(sensorDTO, HttpStatus.OK);
     }
 
+    /**
+     * This method handles PUT requests to update an existing sensor.
+     * @param id the ID of the sensor to update
+     * @param sensor the Sensor object containing updated information
+     * @return ResponseEntity containing the updated SensorDTO object
+     * @throws ObjectNotFound if the sensor with the specified ID is not found
+     */
     @PutMapping("/{id}")
-    public ResponseEntity<SensorDTO> updateSensor(@PathVariable String id, @RequestBody Sensor sensor){
-        try{
-            SensorDTO sensorDTO = sensorService.updateSensor(id,sensor);
-            return ResponseEntity.ok(sensorDTO);
-        }catch (RuntimeException e){
-            SensorDTO errorDTO = new SensorDTO();
-            return ResponseEntity.badRequest().body(errorDTO);
-        }catch (Exception e){
-            SensorDTO errorDTO = new SensorDTO();
-            return new ResponseEntity<>(errorDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<SensorDTO> updateSensor(@PathVariable String id, @RequestBody Sensor sensor) throws ObjectNotFound {
+        SensorDTO sensorDTO = sensorService.updateSensor(id,sensor);
+
+        if(sensorDTO == null) {
+            throw new ObjectNotFound("Sensor with ID " + id + " not found!");
         }
+
+        return new ResponseEntity<>(sensorDTO, HttpStatus.OK);
     }
 
+    /**
+     * This method handles GET requests to retrieve sensor data for a specific date.
+     * @param sensorId the ID of the sensor for which data is requested
+     * @param date the date in "yyyy-MM-dd" format for which data is requested
+     * @return ResponseEntity containing a list of Details objects for the specified date
+     * @throws ObjectNotFound if the sensor with the specified ID is not found
+     */
     @GetMapping("/{sensorId}/data/{date}")
-    public ResponseEntity<List<Details>> getSensorDataByDate(@PathVariable String sensorId, @PathVariable String date) {
-        try {
-            System.out.println("Received date: " + date);
-            if (!date.matches("\\d{4}-\\d{2}-\\d{2}")) {
-                return ResponseEntity.badRequest().build();
-            }
-            SensorDTO sensorDTO = sensorService.getSensorById(sensorId);
-            if(sensorDTO == null) {
-                System.out.println("Sensor not found");
-                return ResponseEntity.notFound().build();
-            }
-            LocalDate localDate = LocalDate.parse(date);
-            Date selectedDate = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-
-            System.out.println("Parsed date: " + selectedDate);
-
-            List<Details> details = sensorService.getSensorDataByDate(sensorId, selectedDate);
-            System.out.println(details);
-            return ResponseEntity.ok(details);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    public ResponseEntity<List<Details>> getSensorDataByDate(@PathVariable String sensorId, @PathVariable String date) throws ObjectNotFound {
+        if (!date.matches("\\d{4}-\\d{2}-\\d{2}")) {
+            return ResponseEntity.badRequest().build();
         }
+
+        SensorDTO sensorDTO = sensorService.getSensorById(sensorId);
+
+        if(sensorDTO == null) {
+            throw new ObjectNotFound("Sensor with ID " + sensorId + " not found!");
+        }
+
+        LocalDate localDate = LocalDate.parse(date);
+        Date selectedDate = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+
+        List<Details> details = sensorService.getSensorDataByDate(sensorId, selectedDate);
+
+        return new ResponseEntity<>(details, HttpStatus.OK);
     }
 
+    /**
+     * This method handles GET requests to retrieve the last details for a specific sensor.
+     * @param sensorId the ID of the sensor for which the last details are requested
+     * @return ResponseEntity containing the last Details object for the specified sensor
+     * @throws ObjectNotFound if no details are found for the specified sensor
+     */
     @GetMapping("/last/details/{sensorId}")
-    public ResponseEntity<Details> getLastSensorDetails(@PathVariable String sensorId){
-        try{
-            System.out.println("Received date: " + sensorId);
-            Details details = sensorService.getLastDetailForSensor(sensorId);
-            if(details == null){
-                System.out.println("details not found");
-                return ResponseEntity.notFound().build();
-            }
-            System.out.println(details);
-            return ResponseEntity.ok(sensorService.getLastDetailForSensor(sensorId));
-        }catch (RuntimeException e){
-            System.out.println("Error while fetching last details: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    public ResponseEntity<Details> getLastSensorDetails(@PathVariable String sensorId) throws ObjectNotFound {
+        Details details = sensorService.getLastDetailForSensor(sensorId);
+
+        if(details == null){
+            throw new ObjectNotFound("No details found for sensor with ID: " + sensorId);
         }
+
+        return new ResponseEntity<>(details, HttpStatus.OK);
     }
 
 }

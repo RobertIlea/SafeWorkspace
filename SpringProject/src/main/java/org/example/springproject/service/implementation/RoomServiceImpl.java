@@ -279,7 +279,7 @@ public class RoomServiceImpl implements RoomService {
                 throw new RuntimeException("Sensor with id: "+ sensorId +" doesn't exist!");
             }
             Sensor sensor = sensorService.deserializeSensor(sensorSnapshot);
-            System.out.println("Sensor id to be updated: " + sensorId);
+
             SensorDTO sensorDTO = SensorMapper.toDTO(sensorId,sensor);
             @SuppressWarnings("unchecked")
             List<Map<String,Object>> sensorsListMap = (List<Map<String, Object>>) roomSnapshot.get("sensors");

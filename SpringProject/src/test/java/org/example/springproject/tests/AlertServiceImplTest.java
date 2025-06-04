@@ -100,7 +100,6 @@ public class AlertServiceImplTest {
         verify(firestore).collection("alerts");
         verify(collectionReference).document();
         verify(documentReference).set(alert);
-        System.out.println("Test of shouldSaveAlertSuccessfully() was successful!");
     }
 
     /**
@@ -158,7 +157,6 @@ public class AlertServiceImplTest {
         verify(firestore).collection("alerts");
         verify(alertCollection).whereEqualTo("roomId", roomId);
         verify(query).get();
-        System.out.println("Test of shouldGetAllAlertsSuccessfully() was successful!");
     }
 
     /**
@@ -223,8 +221,6 @@ public class AlertServiceImplTest {
         verify(roomQuery).whereGreaterThanOrEqualTo(eq("timestamp"), any(Date.class));
         verify(startQuery).whereLessThanOrEqualTo(eq("timestamp"), any(Date.class));
         verify(endQuery).get();
-        System.out.println("Test of shouldGetAlertsByRoomAndDateSuccessfully() was successful!");
-
     }
 
 }
