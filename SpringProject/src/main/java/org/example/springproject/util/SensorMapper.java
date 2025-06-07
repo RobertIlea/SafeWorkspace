@@ -29,7 +29,7 @@ public class SensorMapper {
         if(sensorDTO == null){
             return null;
         }
-        return new Sensor(sensorDTO.getSensorType(), sensorDTO.getPort(), sensorDTO.getDetails());
+        return new Sensor(sensorDTO.getSensorType(), sensorDTO.getPort(), sensorDTO.getDetails(), sensorDTO.isActive());
     }
 
     /**
@@ -44,7 +44,8 @@ public class SensorMapper {
                 (String) sensorMap.get("id"),
                 (String) sensorMap.get("sensorType"),
                 ((Number) sensorMap.get("port")).intValue(),
-                (List<Details>) sensorMap.get("details")
+                (List<Details>) sensorMap.get("details"),
+                Boolean.TRUE.equals(sensorMap.get("active"))
         );
     }
 
@@ -58,7 +59,7 @@ public class SensorMapper {
         if(sensor == null){
             return null;
         }
-        return new SensorDTO(id, sensor.getSensorType(), sensor.getPort(), sensor.getDetails());
+        return new SensorDTO(id, sensor.getSensorType(), sensor.getPort(), sensor.getDetails(), sensor.isActive());
     }
 
     /**
@@ -99,7 +100,7 @@ public class SensorMapper {
         if(sensor == null){
             return null;
         }
-        return new SensorDTO(null, sensor.getSensorType(), sensor.getPort(), sensor.getDetails());
+        return new SensorDTO(null, sensor.getSensorType(), sensor.getPort(), sensor.getDetails(), sensor.isActive());
     }
 
     /**

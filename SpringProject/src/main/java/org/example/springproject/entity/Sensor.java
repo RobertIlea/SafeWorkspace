@@ -28,6 +28,11 @@ public class Sensor {
     private List<Details> details;
 
     /**
+     * Indicates whether the sensor is active.
+     */
+    private boolean active = false;
+
+    /**
      * Default constructor for Sensor.
      */
     public Sensor(){}
@@ -38,10 +43,11 @@ public class Sensor {
      * @param port The port number of the sensor.
      * @param details The list of details associated with the sensor.
      */
-    public Sensor(String sensorType, Integer port, List<Details> details) {
+    public Sensor(String sensorType, Integer port, List<Details> details, boolean active) {
         this.sensorType = sensorType;
         this.port = port;
         this.details = details;
+        this.active = active;
     }
 
     /**
@@ -93,6 +99,22 @@ public class Sensor {
     }
 
     /**
+     * Checks if the sensor is active.
+     * @return true if the sensor is active, false otherwise.
+     */
+    public boolean isActive() {
+        return active;
+    }
+
+    /**
+     * Sets the active status of the sensor.
+     * @param active true to set the sensor as active, false otherwise.
+     */
+    public void setActive(boolean active) {
+       this.active = active;
+    }
+
+    /**
      * Returns a string representation of the Sensor object.
      * @return A string containing the representation of the sensor.
      */
@@ -102,6 +124,7 @@ public class Sensor {
                 "sensorType='" + sensorType + '\'' +
                 ", port=" + port +
                 ", details=" + details +
+                ", isActive=" + active +
                 '}';
     }
 }

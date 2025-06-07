@@ -38,16 +38,28 @@ public class User {
 
     /**
      * Constructs a User with the specified details.
-     * @param name     the name of the user
-     * @param email    the email of the user
+     * @param name the name of the user
+     * @param email the email of the user
      * @param password the password of the user
-     * @param phone    the phone number of the user
+     * @param phone the phone number of the user
      */
     public User(String name, String email, String password, String phone) {
         this.name = name;
         this.email = email;
         this.password = password;
         this.phone = phone;
+    }
+
+    /**
+     * Constructs a User with the specified name, email, and password.
+     * @param name the name of the user
+     * @param email the email of the user
+     * @param password the password of the user
+     */
+    public User(String name, String email, String password) {
+        this.name = name;
+        this.email = email;
+        this.password = password;
     }
 
     /**

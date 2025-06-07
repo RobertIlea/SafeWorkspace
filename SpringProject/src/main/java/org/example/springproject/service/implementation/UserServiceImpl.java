@@ -366,12 +366,10 @@ public class UserServiceImpl implements UserService {
             }
 
             String encryptedPhone = documentSnapshot.getString("phone");
-            System.out.println("before decr" + encryptedPhone);
-            if (encryptedPhone == null || encryptedPhone.isEmpty()) {
-                throw new RuntimeException("User with id: " + userId + " doesn't have a phone number!");
-            }
 
-            encryptedPhone = encryptedPhone.trim();
+            if( encryptedPhone == null || encryptedPhone.isEmpty()) {
+                return null;
+            }
 
             return encryptionService.decrypt(encryptedPhone);
         } catch (Exception e) {

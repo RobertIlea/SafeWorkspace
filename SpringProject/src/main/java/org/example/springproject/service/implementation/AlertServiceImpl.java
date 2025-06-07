@@ -141,4 +141,23 @@ public class AlertServiceImpl implements AlertService {
             throw new RuntimeException("Error processing alert data: " + e.getMessage(), e);
         }
     }
+
+    /**
+     * Removes all alerts associated with a specific sensor ID from the Firestore database.
+     * @param sensorId The ID of the sensor for which alerts are to be removed.
+     * @throws RuntimeException if there is an error while removing the alerts.
+     */
+    @Override
+    public void removeAllAlertsBySensorId(String sensorId) throws RuntimeException {
+        try {
+            ApiFuture<QuerySnapshot> future = firestore.collection(ALERT_COLLECTION).whereEqualTo("sensorId", sensorId).get();
+            List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+
+            for (QueryDocumentSnapshot document : documents) {
+                document.getReference().delete();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error removing alerts by sensor ID: " + e.getMessage(), e);
+        }
+    }
 }

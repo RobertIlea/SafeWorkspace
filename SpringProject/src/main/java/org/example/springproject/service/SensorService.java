@@ -72,4 +72,40 @@ public interface SensorService {
      * @return The last Details object for the specified sensor ID.
      */
     Details getLastDetailForSensor(String sensorId);
+
+    /**
+     * Clears all sensor details for a specific sensor ID.
+     * @param sensorId The ID of the sensor for which to clear details.
+     * @throws RuntimeException if an error occurs during the operation.
+     */
+    void clearAllSensorsDetailsBySensorId(String sensorId) throws RuntimeException;
+
+    /**
+     * Clears sensor details from a specific room.
+     * @param roomId The ID of the room from which to clear sensor details.
+     * @throws RuntimeException if an error occurs during the operation.
+     */
+    void clearSensorDetailsFromRoom(String roomId) throws RuntimeException;
+
+    /**
+     * Activates selected sensors.
+     * @param sensorIds A list of sensor IDs to be activated.
+     * @throws RuntimeException if an error occurs during the operation.
+     */
+    void activateSelectedSensor(List<String> sensorIds) throws RuntimeException;
+
+    /**
+     * Deactivates selected sensors.
+     * @param sensorIds A list of sensor IDs to be deactivated.
+     * @throws RuntimeException if an error occurs during the operation.
+     */
+    void deactivateSelectedSensor(List<String> sensorIds) throws RuntimeException;
+
+    /**
+     * Sets the status of a specific sensor.
+     * @param sensorId The ID of the sensor whose status is to be set.
+     * @param status The new status for the sensor (true for active, false for inactive).
+     * @throws RuntimeException if an error occurs during the operation.
+     */
+    void setStatusForSensor(String sensorId, boolean status) throws RuntimeException;
 }

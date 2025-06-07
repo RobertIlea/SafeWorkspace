@@ -9,6 +9,7 @@ import org.example.springproject.dto.SensorDTO;
 import org.example.springproject.entity.Details;
 import org.example.springproject.entity.Sensor;
 import org.example.springproject.exception.CreationException;
+import org.example.springproject.exception.EmptyResultException;
 import org.example.springproject.exception.ObjectNotFound;
 import org.example.springproject.service.SensorService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * SensorController handles HTTP requests related to sensor operations.
@@ -156,17 +158,33 @@ public class SensorController {
      * This method handles GET requests to retrieve the last details for a specific sensor.
      * @param sensorId the ID of the sensor for which the last details are requested
      * @return ResponseEntity containing the last Details object for the specified sensor
-     * @throws ObjectNotFound if no details are found for the specified sensor
+     * @throws EmptyResultException if no details are found for the specified sensor
      */
     @GetMapping("/last/details/{sensorId}")
-    public ResponseEntity<Details> getLastSensorDetails(@PathVariable String sensorId) throws ObjectNotFound {
+    public ResponseEntity<Details> getLastSensorDetails(@PathVariable String sensorId) throws EmptyResultException {
         Details details = sensorService.getLastDetailForSensor(sensorId);
 
         if(details == null){
-            throw new ObjectNotFound("No details found for sensor with ID: " + sensorId);
+            throw new EmptyResultException("No details yet for sensor: " + sensorId);
         }
 
         return new ResponseEntity<>(details, HttpStatus.OK);
+    }
+
+    /**
+     * This method handles POST requests to set the status of a sensor.
+     * @param sensorId the ID of the sensor for which the status is being set
+     * @param payload a map containing the status to be set (active or inactive)
+     * @return ResponseEntity containing a message indicating the status change
+     */
+    @PutMapping("/{sensorId}/status")
+    public ResponseEntity<Map<String, String>> setSensorStatus(@PathVariable String sensorId, @RequestBody Map<String, Object> payload) {
+        boolean status = (Boolean) payload.get("active");
+
+        sensorService.setStatusForSensor(sensorId, status);
+
+        Map<String, String> response = Map.of("message", "Sensor with ID " + sensorId + " has been " + (status ? "activated" : "deactivated") + ".");
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 }

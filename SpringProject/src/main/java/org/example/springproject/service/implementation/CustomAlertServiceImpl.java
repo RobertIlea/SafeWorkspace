@@ -6,9 +6,8 @@
  */
 package org.example.springproject.service.implementation;
 
-import com.google.cloud.firestore.DocumentReference;
-import com.google.cloud.firestore.DocumentSnapshot;
-import com.google.cloud.firestore.Firestore;
+import com.google.api.core.ApiFuture;
+import com.google.cloud.firestore.*;
 import org.example.springproject.dto.CustomAlertDTO;
 import org.example.springproject.entity.CustomAlert;
 import org.example.springproject.service.CustomAlertService;
@@ -211,5 +210,29 @@ public class CustomAlertServiceImpl implements CustomAlertService {
         }
     }
 
+    /**
+     * Deletes all custom alerts associated with a specific room ID and user ID from the Firestore database.
+     * @param roomId the ID of the room for which custom alerts are to be deleted
+     * @param userId the ID of the user for whom custom alerts are to be deleted
+     * @throws RuntimeException if there is an error while deleting the custom alerts
+     */
+    @Override
+    public void deleteCustomAlertsByRoomIdAndUserId(String roomId, String userId) throws RuntimeException{
+        try{
+            ApiFuture<QuerySnapshot> future = firestore.collection(CUSTOM_ALERTS_COLLECTION)
+                    .whereEqualTo("roomId", roomId)
+                    .whereEqualTo("userId", userId)
+                    .get();
+
+            List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+
+            for(QueryDocumentSnapshot document : documents) {
+                String alertId = document.getId();
+                firestore.collection(CUSTOM_ALERTS_COLLECTION).document(alertId).delete().get();
+            }
+        }catch(Exception e){
+            throw new RuntimeException("Error deleting custom alerts by room ID and user ID: " + e.getMessage());
+        }
+    }
 
 }

@@ -25,6 +25,8 @@ public class UserDTO {
      */
     private String email;
 
+    private String password;
+
     /**
      * Default constructor for UserDTO.
      */

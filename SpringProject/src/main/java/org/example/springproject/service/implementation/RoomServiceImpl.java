@@ -21,6 +21,8 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 
 /**
@@ -415,19 +417,21 @@ public class RoomServiceImpl implements RoomService {
             throw new RuntimeException("Selected sensor ids cannot be null!");
         }
         // Create a list of the selected sensors
-        List<SensorDTO> selectedSensors = new ArrayList<>();
-        for(String sensorId: selectedSensorIds) {
-            SensorDTO sensorDTO = sensorService.getSensorById(sensorId);
-            if(sensorDTO == null){
-                throw new RuntimeException("Sensor with id: " + sensorId + " doesn't exist!");
-            }
-            selectedSensors.add(sensorDTO);
+        List<SensorDTO> allRoomSensors = getSensorsByRoomId(roomId);
+
+        List<SensorDTO> updatedSensors = new ArrayList<>();
+
+        for (SensorDTO sensor : allRoomSensors) {
+            boolean isSelected = selectedSensorIds.contains(sensor.getId());
+            sensor.setActive(isSelected);
+            updatedSensors.add(sensor);
         }
+
 
         // Update the room with the new userId and name
         roomDTO.setUserId(userId);
         roomDTO.setName(newName);
-        roomDTO.setSensors(selectedSensors);
+        roomDTO.setSensors(updatedSensors);
 
         try {
             // Update the room in Firestore

@@ -63,4 +63,6 @@ public interface CustomAlertService {
      * @return the updated CustomAlertDTO object
      */
     CustomAlertDTO updateCustomAlert(String alertId, CustomAlert updatedAlert);
+
+    void deleteCustomAlertsByRoomIdAndUserId(String roomId, String userId) throws RuntimeException;
 }

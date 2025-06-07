@@ -35,6 +35,11 @@ public class SensorDTO {
     private List<Details> details;
 
     /**
+     * Indicates whether the sensor is active.
+     */
+    private boolean active = false;
+
+    /**
      * Default constructor for SensorDTO.
      */
     public SensorDTO(){}
@@ -46,10 +51,18 @@ public class SensorDTO {
      * @param port Port number associated with the sensor.
      * @param details List of details associated with the sensor.
      */
-    public SensorDTO(String id, String sensorType,Integer port, List<Details> details) {
+    public SensorDTO(String id, String sensorType,Integer port, List<Details> details, boolean active) {
         this.id = id;
         this.sensorType = sensorType;
         this.port = port;
+        this.details = details;
+        this.active = active;
+    }
+
+    public SensorDTO(String id, String sensorType, int i, List<Details> details) {
+        this.id = id;
+        this.sensorType = sensorType;
+        this.port = i;
         this.details = details;
     }
 
@@ -118,6 +131,22 @@ public class SensorDTO {
     }
 
     /**
+     * Checks if the sensor is active.
+     * @return true if the sensor is active, false otherwise.
+     */
+    public boolean isActive() {
+        return active;
+    }
+
+    /**
+     * Sets the active status of the sensor.
+     * @param active true to set the sensor as active, false otherwise.
+     */
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    /**
      * Returns a string representation of the SensorDTO object.
      * @return the string representation of the SensorDTO.
      */
@@ -128,6 +157,7 @@ public class SensorDTO {
                 ", sensorType='" + sensorType + '\'' +
                 ", port=" + port +
                 ", details=" + details +
+                ", isActive=" + active +
                 '}';
     }
 }
