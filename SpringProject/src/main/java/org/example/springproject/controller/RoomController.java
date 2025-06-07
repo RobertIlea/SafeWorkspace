@@ -11,14 +11,14 @@ import org.example.springproject.entity.Room;
 import org.example.springproject.exception.CreationException;
 import org.example.springproject.exception.EmptyResultException;
 import org.example.springproject.exception.ObjectNotFound;
-import org.example.springproject.service.JwtService;
-import org.example.springproject.service.RoomService;
+import org.example.springproject.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -38,6 +38,21 @@ public class RoomController {
      */
     @Autowired
     private RoomService roomService;
+
+    /**
+     * The CustomAlertService is injected to handle custom alert operations.
+     */
+    @Autowired
+    private CustomAlertService customAlertService;
+
+    /**
+     * The SensorService is injected to handle sensor-related operations.
+     */
+    @Autowired
+    private SensorService sensorService;
+
+    @Autowired
+    private AlertService alertService;
 
     /**
      * The JwtService is injected to handle JWT token operations.
@@ -181,8 +196,28 @@ public class RoomController {
     public ResponseEntity<RoomDTO> removeRoomById(@PathVariable String roomId, @PathVariable String userId) throws ObjectNotFound {
         RoomDTO roomDTO = roomService.removeUserFromRoom(roomId, userId);
 
+        // Delete all the custom alerts associated with the user in this room
+        customAlertService.deleteCustomAlertsByRoomIdAndUserId(roomId, userId);
+
+        // Clear sensor details in the room collection by room ID
+        sensorService.clearSensorDetailsFromRoom(roomId);
+
+        // Set the sensors in the room to inactive
         if(roomDTO == null) {
             throw new ObjectNotFound("Room with ID " + roomId + " not found or user with ID " + userId + " is not assigned to this room!");
+        }
+
+        List<String> sensorIds = roomDTO.getSensors() != null
+                ? roomDTO.getSensors().stream().map(SensorDTO::getId).collect(Collectors.toList())
+                : Collections.emptyList();
+
+        sensorService.deactivateSelectedSensor(sensorIds);
+
+        // Clear the sensors details in sensors collection
+        // Remove all alerts associated with the sensors in the room
+        for(SensorDTO sensorDTO : roomDTO.getSensors()) {
+            sensorService.clearAllSensorsDetailsBySensorId(sensorDTO.getId());
+            alertService.removeAllAlertsBySensorId(sensorDTO.getId());
         }
 
         return new ResponseEntity<>(roomDTO, HttpStatus.OK);
@@ -244,6 +279,9 @@ public class RoomController {
 
             // Convert sensorIds from List<Object> to List<String>
             List<String> sensorIds = ((List<?>) requestBody.get("sensorIds")).stream().map(Object::toString).collect(Collectors.toList());
+
+            // Set the selected sensors to be active
+            sensorService.activateSelectedSensor(sensorIds);
 
             if (roomId == null || userId == null) {
                 throw new CreationException("Room ID and User ID must not be null!");

@@ -23,7 +23,7 @@
 
   <p class="threshold-info">
     <mat-icon class="info-icon" fontIcon="info"></mat-icon>
-    System will automatically trigger an alert when the sensor value goes above or below this threshold.
+    System will automatically trigger an alert when the sensor value goes above or below system threshold.
   </p>
   <mat-form-field appearance="outline" class="custom-field">
     <mat-label>Threshold</mat-label>
@@ -42,6 +42,34 @@
     <mat-label>Message</mat-label>
     <textarea matInput formControlName="message"></textarea>
   </mat-form-field>
+
+  <div *ngIf="alertForm.contains('countryPrefix') && alertForm.contains('phone')">
+    <p class="threshold-info">
+      <mat-icon class="info-icon" fontIcon="info"></mat-icon>
+      Add your phone number to receive SMS/CALLS alerts.
+    </p>
+      <div class="phone-fields" style="display: flex; gap: 10px;">
+        <mat-form-field appearance="outline" class="custom-field" style="flex: 1;" >
+          <mat-label>Prefix</mat-label>
+          <mat-select formControlName="countryPrefix">
+            <mat-option *ngFor="let prefix of countryPrefixes" [value]="prefix.value">
+              {{ prefix.label }} ({{ prefix.value }})
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="custom-field" style="flex: 2;">
+          <mat-label>Phone Number</mat-label>
+          <input matInput type="tel" formControlName="phone" />
+          <ng-container *ngIf="alertForm.get('phone') as phoneControl">
+            <mat-error *ngIf="phoneControl.hasError('required')"></mat-error>
+            <mat-error *ngIf="phoneControl.hasError('pattern')">
+              Invalid phone number format.
+            </mat-error>
+          </ng-container>
+        </mat-form-field>
+      </div>
+    </div>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">

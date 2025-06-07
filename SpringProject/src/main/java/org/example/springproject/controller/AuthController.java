@@ -6,9 +6,11 @@
  */
 package org.example.springproject.controller;
 
+import org.example.springproject.dto.RegisterDTO;
 import org.example.springproject.dto.UserDTO;
 import org.example.springproject.entity.User;
 import org.example.springproject.exception.CreationException;
+import org.example.springproject.exception.ObjectNotFound;
 import org.example.springproject.service.JwtService;
 import org.example.springproject.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -133,19 +135,31 @@ public class AuthController {
 
     /**
      * This method handles POST requests to register a new user.
-     * @param user the User object containing user details to be registered
+     * @param request the request body containing user details
      * @return ResponseEntity containing the created UserDTO if registration is successful
-     * @throws CreationException if the user creation fails
+     * @throws ObjectNotFound if the request format is invalid or if user details are missing
      */
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody User user) throws CreationException {
+    public ResponseEntity<?> register(@RequestBody RegisterDTO request) throws ObjectNotFound {
+        User user = new User(request.getName(), request.getEmail(), request.getPassword());
+
+        if(user.getName() == null || user.getEmail() == null || user.getPassword() == null) {
+            throw new ObjectNotFound("Invalid user details. Name, email, and password are required.");
+        }
+
         UserDTO createdUser = userService.addUser(user);
 
         if(createdUser == null) {
-            throw new CreationException("Failed to create user.");
+            throw new ObjectNotFound("Failed to create user.");
         }
 
-        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+        String token = jwtService.generateToken(createdUser.getEmail());
+
+        Map<String,Object> response = new HashMap<>();
+        response.put("user", user);
+        response.put("token", token);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
 }

@@ -2,6 +2,10 @@ import {Component, Inject, OnInit} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {CustomAlertService} from '../../services/custom-alert.service';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
+import {AlertEventsService} from '../../services/alert-events.service';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {User} from '../../models/user-model';
+import {UserService} from '../../services/user.service';
 
 @Component({
   selector: 'app-custom-alert-dialog',
@@ -14,33 +18,78 @@ export class CustomAlertDialogComponent implements OnInit {
   alertForm: FormGroup;
   currentMin: number = 0;
   currentMax: number = 0;
-  availableParams: string[] = []
+  availableParams: string[] = [];
+  currentUser: User | null;
+
   paramThresholdLimits: { [key: string]: { min: number; max: number } } = {
-    temperature: { min: 0, max: 39.9 },
+    temperature: { min: 0, max: 49.9 },
     humidity: { min: 0, max: 90 },
     gas: { min: 100, max: 699 },
-    mq2Value: { min: 0, max: 1000 }
+    mq2Value: { min: 0, max: 799 }
   };
 
+  sensorTypeToParamMap: { [sensorType: string]: string[] } = {
+    DHT22: ['temperature', 'humidity'],
+    MQ2: ['mq2Value'],
+    MQ5: ['gas']
+  };
 
-  ngOnInit(): void {
-    this.validateThresholdLimit();
-  }
-  constructor(private fb: FormBuilder, private customAlertService: CustomAlertService, private dialogRef: MatDialogRef<CustomAlertDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: any) {
-    this.availableParams = Object.keys(data?.sensor?.details?.[0]?.data || {});
+  countryPrefixes = [
+    { label: 'Romania', value: '+40' },
+    { label: 'United States', value: '+1' },
+    { label: 'United Kingdom', value: '+44' },
+    { label: 'Germany', value: '+49' },
+    { label: 'France', value: '+33' }
+  ]
+
+  constructor(private fb: FormBuilder,private snackBar: MatSnackBar ,private customAlertService: CustomAlertService, private alertEventsService: AlertEventsService, private dialogRef: MatDialogRef<CustomAlertDialogComponent>, @Inject(MAT_DIALOG_DATA) public data: any, private userService: UserService) {
+    const rawParams = data?.sensor?.details?.[0]?.data;
+    const sensorType = data?.sensor?.sensorType;
+
+    this.availableParams = rawParams ? Object.keys(rawParams) : this.sensorTypeToParamMap[sensorType] || [];
 
     this.alertForm = this.fb.group({
       parameter: [this.availableParams[0], Validators.required],
       condition: ['>', Validators.required],
       threshold: [null, [Validators.required, Validators.min(0)]],
-      message: ['', Validators.required],
+      message: ['', Validators.required]
     });
 
-    const initialParam = this.alertForm.get('parameter')?.value;
-    const initialLimits = this.paramThresholdLimits[initialParam];
-    this.currentMin = initialLimits.min;
-    this.currentMax = initialLimits.max;
+    const initialLimits = this.paramThresholdLimits[this.availableParams[0]];
+    if (initialLimits) {
+      this.currentMin = initialLimits.min;
+      this.currentMax = initialLimits.max;
+    }
+
+    this.currentUser = data?.user || null;
   }
+
+
+  ngOnInit(): void {
+    this.validateThresholdLimit();
+
+    this.userService.get_user_phone_by_id(this.data.userId).subscribe({
+      next: (phone: string) => {
+        if (!phone) {
+          this.addPhoneControls();
+        }
+      },
+      error: (error) => {
+        if( error.status === 500 || error.status === 404) {
+          this.addPhoneControls();
+        }
+      }
+    });
+  }
+
+  addPhoneControls(): void {
+    this.alertForm.addControl('countryPrefix', this.fb.control('+40', Validators.required));
+    this.alertForm.addControl('phone', this.fb.control('', [
+      Validators.required,
+      Validators.pattern(/^[0-9]{7,15}$/)
+    ]));
+  }
+
 
   submit(){
     if (this.alertForm) {
@@ -52,17 +101,34 @@ export class CustomAlertDialogComponent implements OnInit {
         ...this.alertForm.value,
       };
 
+      if (this.alertForm.contains('phone')) {
+        const phone = this.alertForm.get('countryPrefix')?.value + this.alertForm.get('phone')?.value;
+        this.userService.update_user_phone(this.data.userId, phone).subscribe();
+      }
+
+
+
       this.customAlertService.create_custom_alert(alert).subscribe({
-        next: (response) => {
-          console.log('Custom alert created:', response);
+        next: () => {
+          this.alertEventsService.customAlertCreated$.next();
+          this.snackBar.open('Custom alert created successfully!', 'Close', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
           this.dialogRef.close(true);
         },
-        error: (error) => {
-          console.error('Error creating custom alert:', error);
+        error: () => {
+          this.snackBar.open('Failed to create custom alert. Please try again.', 'Close', {
+            duration: 3000,
+            panelClass: ['error-snackbar']
+          });
         }
       });
     } else {
-      console.error('Form is invalid');
+      this.snackBar.open('Form is invalid. Please check your inputs.', 'Close', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
     }
   }
 

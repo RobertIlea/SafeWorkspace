@@ -1,1 +1,70 @@
-<p>register works!</p>
+<div class="split-container">
+  <div class="form-container">
+    <div class="login-container">
+      <h3>Register</h3>
+      <form [formGroup]="registerForm" (ngSubmit)="onRegister()">
+        <div class="input-box">
+          <label for="name">Name</label>
+          <input
+            type="text"
+            id="name"
+            formControlName="name"
+            placeholder="Enter your name"
+          />
+          <div *ngIf="registerForm.get('name')?.touched && registerForm.get('name')?.invalid" class="error">
+            Name must be at least 5 characters.
+          </div>
+        </div>
+
+        <div class="input-box">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            placeholder="Enter your email"
+          />
+          <div *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.invalid" class="error">
+            Invalid email format.
+          </div>
+        </div>
+
+        <div class="input-box">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            formControlName="password"
+            placeholder="Enter your password"
+          />
+          <div *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.invalid" class="error">
+            Password must be at least 8 characters.
+          </div>
+        </div>
+
+        <div class="input-box">
+          <label for="confirmPassword">Confirm Password</label>
+          <input
+            type="password"
+            id="confirmPassword"
+            formControlName="confirmPassword"
+            placeholder="Confirm your password"
+          />
+          <div *ngIf="registerForm.errors?.['notMatching'] && registerForm.get('confirmPassword')?.touched" class="error">
+            Passwords do not match.
+          </div>
+        </div>
+
+        <button type="submit" class="primary-btn">Register</button>
+      </form>
+
+      <p class="switch-text">
+        Already have an account? <a href="/login">Login here</a>
+      </p>
+    </div>
+  </div>
+
+  <div class="quote-container">
+    <h1>Create your account and start monitoring your rooms.</h1>
+  </div>
+</div>

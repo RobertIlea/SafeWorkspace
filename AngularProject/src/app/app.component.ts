@@ -1,3 +1,7 @@
+/**
+ * app.component.ts
+ * This is the root component of the Angular application.
+ */
 import { Component } from '@angular/core';
 
 @Component({

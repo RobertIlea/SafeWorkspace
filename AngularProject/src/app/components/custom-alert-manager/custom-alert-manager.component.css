@@ -1,7 +1,12 @@
 table {
   width: 100%;
   table-layout: fixed;
-  margin-top: 20px;
+}
+
+.table-scroll-container{
+  max-height: 212px;
+  overflow-y: auto;
+  border-top: 1px solid #ddd;
 }
 
 .mat-header-cell, .mat-cell {

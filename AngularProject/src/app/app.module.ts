@@ -1,3 +1,9 @@
+/**
+ * app.module.ts
+ * This is the main module of the Angular application.
+ * It imports necessary Angular modules.
+ * It declares components used in the application.
+ */
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 

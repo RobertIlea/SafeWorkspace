@@ -1,3 +1,7 @@
+/**
+ * user.service.spec.ts
+ * This file contains unit tests for the UserService.
+ */
 import { TestBed } from '@angular/core/testing';
 
 import { UserService } from './user.service';

@@ -387,6 +387,11 @@ public class MqttConfig {
      * @throws Exception if there is an error while processing the data for the room
      */
     private void processDataForRoom(SensorDTO sensorDTO, String roomId) throws Exception {
+        // Check if the sensor is active
+        if(!sensorDTO.isActive()) {
+            System.out.println("Sensor is not active, skipping processing for room: " + roomId);
+            return;
+        }
         if(sensorDTO.getSensorType().equals("DHT22")){
             alertDHT22(roomId, sensorDTO);
         }
@@ -463,7 +468,8 @@ public class MqttConfig {
                     String dhtSensorId ="HGNX6Kp9FiSTSclNwHHN";
 
                     // Create a SensorDTO object with the sensor ID, type, and details
-                    SensorDTO dht22SensorDTO = new SensorDTO(dhtSensorId,"DHT22",21, List.of(details));
+                    SensorDTO dht22SensorDTO = sensorService.getSensorById(dhtSensorId);
+                    dht22SensorDTO.setDetails(List.of(details));
 
                     try {
                         // Process the sensor data for the primary room
@@ -494,7 +500,8 @@ public class MqttConfig {
                     String mq5SensorId ="nv0MubTXWBrjHZpQlZxl";
 
                     // Create a SensorDTO object with the sensor ID, type, and details
-                    SensorDTO mq5SensorDTO = new SensorDTO(mq5SensorId,"MQ5",0, List.of(details));
+                    SensorDTO mq5SensorDTO = sensorService.getSensorById(mq5SensorId);
+                    mq5SensorDTO.setDetails(List.of(details));
 
                     try {
                         // Process the sensor data for the primary room
@@ -532,8 +539,10 @@ public class MqttConfig {
                     String esp32x1Mq5SensorId = "ok7tYDjTHI5OLUUcRm8q";
 
                     // Create SensorDTO objects for MQ2 and MQ5 sensors
-                    SensorDTO esp32x1Mq2SensorDTO = new SensorDTO(esp32x1Mq2SensorId,"MQ2",36,List.of(detailsMq2));
-                    SensorDTO esp32x1Mq5SensorDTO = new SensorDTO(esp32x1Mq5SensorId,"MQ5",39,List.of(detailsMq5));
+                    SensorDTO esp32x1Mq2SensorDTO = sensorService.getSensorById(esp32x1Mq2SensorId);
+                    esp32x1Mq2SensorDTO.setDetails(List.of(detailsMq2));
+                    SensorDTO esp32x1Mq5SensorDTO = sensorService.getSensorById(esp32x1Mq5SensorId);
+                    esp32x1Mq5SensorDTO.setDetails(List.of(detailsMq5));
 
                     try {
                         // Process the sensor data for Esp32x1 sensors
@@ -543,6 +552,7 @@ public class MqttConfig {
                         throw new RuntimeException("Couldn't process data for Esp32x1 sensors: " + e);
                     }
                 }
+
                 if(topic.equals(topicEsp32x2)){
                     // Create a Gson instance to parse JSON data
                     Gson gson = new Gson();
@@ -562,7 +572,8 @@ public class MqttConfig {
                     esp32x2Mq2Data.put("mq2Value", (float) mq2Value);
                     Details detailsMq2 = new Details(timestamp,esp32x2Mq2Data);
                     String mq2SensorId = "bS85GgrlLs9ikiNG0EXU";
-                    SensorDTO esp32x2Mq2SensorDTO = new SensorDTO(mq2SensorId,"MQ2",36,List.of(detailsMq2));
+                    SensorDTO esp32x2Mq2SensorDTO = sensorService.getSensorById(mq2SensorId);
+                    esp32x2Mq2SensorDTO.setDetails(List.of(detailsMq2));
 
                     // Create a map to hold DHT22 sensor data
                     Map<String,Float> esp32x2Dht22Data = new HashMap<>();
@@ -570,7 +581,8 @@ public class MqttConfig {
                     esp32x2Dht22Data.put("humidity", humidity);
                     Details detailsDht22 = new Details(timestamp,esp32x2Dht22Data);
                     String dhtSensorId = "OpjcAjYNdCkMgEb2CV0T";
-                    SensorDTO esp32x2Dht22SensorDTO = new SensorDTO(dhtSensorId,"DHT22",4,List.of(detailsDht22));
+                    SensorDTO esp32x2Dht22SensorDTO = sensorService.getSensorById(dhtSensorId);
+                    esp32x2Dht22SensorDTO.setDetails(List.of(detailsDht22));
 
                     try {
                         // Process the sensor data for Esp32x2 sensors

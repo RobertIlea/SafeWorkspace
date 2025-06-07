@@ -37,4 +37,6 @@ public interface AlertService {
      * @return a list of AlertDTO objects associated with the specified room and date
      */
     List<AlertDTO> getAlertsByRoomAndDate(String roomId, Date selectedDate);
+
+    void removeAllAlertsBySensorId(String sensorId) throws RuntimeException;
 }

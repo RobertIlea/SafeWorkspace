@@ -7,7 +7,7 @@
   box-sizing: border-box;
   justify-content: center;
   overflow-y: hidden;
-  padding: 1rem 1.5rem 1.5rem 1.5rem;
+  padding: 0 1.5rem 2.5rem 1.5rem;
 }
 .no-data-message{
   margin-top: 20px;
@@ -19,6 +19,7 @@
   justify-content: center;
   gap: 8px;
 }
+
 .row {
   display: flex;
   flex-wrap: wrap;
@@ -246,6 +247,6 @@ mat-form-field {
 
   .cards {
     padding: 2rem 2rem 2rem 2rem;
-    justify-content: space-between;
+    justify-content: flex-start;
   }
 }

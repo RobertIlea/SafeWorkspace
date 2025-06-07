@@ -1,0 +1,67 @@
+mat-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 8px;
+  width: 100%;
+}
+
+.custom-field {
+  margin-top: 8px;
+}
+
+mat-form-field {
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+mat-label {
+  font-weight: 500;
+  color: #444;
+}
+
+mat-select, input[matInput], textarea[matInput] {
+  font-size: 0.9rem;
+}
+
+textarea[matInput] {
+  min-height: 60px;
+  resize: vertical;
+}
+
+mat-dialog-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+mat-dialog-actions {
+  margin-top: 16px;
+  padding-right: 8px;
+}
+
+button[mat-button] {
+  font-size: 0.85rem;
+  text-transform: none;
+}
+
+button[mat-button]:not(:last-child) {
+  margin-right: 8px;
+}
+
+.threshold-info {
+  font-size: 0.75rem;
+  color: #555;
+  margin-top: -20px;
+  margin-bottom: -14px;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.threshold-info .info-icon {
+  font-size: 14px;
+  color: #1976d2;
+}

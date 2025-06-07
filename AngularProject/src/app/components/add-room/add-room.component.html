@@ -1,13 +1,7 @@
 <h2 mat-dialog-title>Add new room</h2>
 
 <mat-dialog-content *ngIf="availableRooms.length > 0; else noRoomsAvailable">
-  <mat-form-field appearance="fill" style="width: 100%;">
-    <mat-label>New Room Name</mat-label>
-    <input matInput [(ngModel)]="newRoomName">
-    <mat-hint *ngIf="selectedRoom">Original name: {{ selectedRoom.name }}</mat-hint>
-  </mat-form-field>
-
-  <mat-form-field appearance="fill" style="width: 100%;">
+  <mat-form-field appearance="outline" style="width: 100%;" class="label">
     <mat-label>Select room</mat-label>
     <mat-select [(ngModel)]="selectedRoom" (selectionChange)="on_room_change()">
       <mat-option *ngFor="let room of availableRooms" [value]="room">
@@ -16,13 +10,22 @@
     </mat-select>
   </mat-form-field>
 
-  <mat-form-field appearance="fill" style="width: 100%;" *ngIf="availableSensors.length > 0">
+  <mat-form-field appearance="outline" style="width: 100%;" class="label" *ngIf="availableSensors.length > 0">
     <mat-label>Select Sensors</mat-label>
     <mat-select multiple [(ngModel)]="selectedSensors">
       <mat-option *ngFor="let sensor of availableSensors" [value]="sensor">
         {{ sensor.sensorType }} (Port: {{ sensor.port }})
       </mat-option>
     </mat-select>
+  </mat-form-field>
+
+  <p class="threshold-info">
+    <mat-icon class="info-icon" fontIcon="info"></mat-icon>
+    You can change the name of the room.
+  </p>
+  <mat-form-field appearance="outline" style="width: 100%;" class="label">
+    <mat-label>New Room Name</mat-label>
+    <input matInput [(ngModel)]="newRoomName">
   </mat-form-field>
 
   <mat-error *ngIf="errorMessage">{{ errorMessage }}</mat-error>

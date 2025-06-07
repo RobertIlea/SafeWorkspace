@@ -1,4 +1,4 @@
-import {ChangeDetectorRef, Component, Inject, OnDestroy, OnInit} from '@angular/core';
+import {ChangeDetectorRef, Component, Inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialog} from '@angular/material/dialog';
 import {RoomService} from '../../services/room.service';
 import {Sensor} from '../../models/sensor-model';
@@ -7,6 +7,8 @@ import {distinctUntilChanged, Subscription} from 'rxjs';
 import {CustomAlertDialogComponent} from '../custom-alert-dialog/custom-alert-dialog.component';
 import {Room} from '../../models/room-model';
 import {Alert} from '../../models/alert-model';
+import {SensorService} from '../../services/sensor.service';
+import {MatSnackBar} from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-room-dialog',
@@ -19,7 +21,7 @@ export class RoomDialogComponent implements OnInit,OnDestroy {
   private roomSub: Subscription | null = null;
   room: Room | null = null;
   alerts: Alert[] = [];
-  constructor(@Inject(MAT_DIALOG_DATA) public data:any, private roomService: RoomService,  private cdr: ChangeDetectorRef,  private dialog: MatDialog){}
+  constructor(@Inject(MAT_DIALOG_DATA) public data:any, private roomService: RoomService,  private cdr: ChangeDetectorRef,  private dialog: MatDialog, private sensorService: SensorService, private snackBar: MatSnackBar) {}
 
 
   ngOnInit() {
@@ -28,7 +30,6 @@ export class RoomDialogComponent implements OnInit,OnDestroy {
 
     this.roomSub = this.roomService.rooms$.pipe(
       distinctUntilChanged((prev, curr) => {
-        // Only update if the room data actually changed
         const currentRoom = curr.find(r => r.id === this.data.room.id);
         return JSON.stringify(currentRoom) === JSON.stringify(this.room);
       })
@@ -36,7 +37,6 @@ export class RoomDialogComponent implements OnInit,OnDestroy {
       const updatedRoom = rooms.find(room => room.id === this.data.room.id);
       if (updatedRoom) {
         this.room = {...updatedRoom};
-        // Don't overwrite alerts unless they actually changed
         if (this.data.alerts && this.data.alerts.length > 0) {
           this.alerts = [...this.data.alerts];
         }
@@ -100,7 +100,7 @@ export class RoomDialogComponent implements OnInit,OnDestroy {
 
   openCustomAlertDialog(sensor:Sensor): void {
     this.dialog.open(CustomAlertDialogComponent, {
-      width: '400px',
+      width: '500px',
       data: {
         room: this.data.room,
         sensor: sensor,
@@ -109,4 +109,21 @@ export class RoomDialogComponent implements OnInit,OnDestroy {
     })
   }
 
+  toggleSensorStatus(sensor: any): void {
+    const newStatus = !sensor.active;
+    this.sensorService.set_sensor_status(sensor.id, newStatus).subscribe({
+      next: () => {
+        sensor.active = newStatus;
+        this.snackBar.open(`Sensor ${newStatus ? 'activated' : 'deactivated'} successfully.`, 'Close', {
+          duration: 3000
+        });
+      },
+      error: (err) => {
+        this.snackBar.open(`Failed to update sensor status.`, 'Close', {
+          duration: 3000
+        });
+        console.error(err);
+      }
+    });
+  }
 }

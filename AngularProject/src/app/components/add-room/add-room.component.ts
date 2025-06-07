@@ -5,6 +5,7 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { Sensor } from '../../models/sensor-model';
 import { User } from '../../models/user-model';
 import { UserService } from '../../services/user.service';
+import {MatSnackBar} from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-add-room',
@@ -21,10 +22,12 @@ export class AddRoomComponent implements OnInit{
   availableRooms: Room[] = [];
   selectedRoom: Room | null = null;
   userId: string = '';
+
   constructor(
     private dialogRef: MatDialogRef<AddRoomComponent>,
     private roomService: RoomService,
     private userService: UserService,
+    private snackBar: MatSnackBar,
   ){}
 
   ngOnInit(): void {
@@ -41,13 +44,14 @@ export class AddRoomComponent implements OnInit{
 
   on_room_change(){
     if (this.selectedRoom) {
+      this.newRoomName = this.selectedRoom.name || '';
       this.roomService.get_sensors_by_room_id(this.selectedRoom.id!).subscribe({
         next: (sensors) => {
           this.availableSensors = sensors;
           this.selectedSensors = []; // reset selections
         },
         error: (err) => {
-          console.warn("Couldn't load sensors:", err);
+          console.error("Couldn't load sensors:", err);
         }
       });
     }
@@ -57,7 +61,7 @@ export class AddRoomComponent implements OnInit{
   get_user_email():string{
     const userJson = sessionStorage.getItem("user");
     if (!userJson) {
-      console.warn("User not found in sessionStorage!");
+      console.error("User not found in sessionStorage!");
       return '';
     }
 
@@ -76,7 +80,7 @@ export class AddRoomComponent implements OnInit{
         this.userId = data;
       },
       error: (err) => {
-        console.warn("Couldn't get the id from the connected user: " , err);
+        console.error("Couldn't get the id from the connected user: " , err);
       }
     })
   }
@@ -87,11 +91,6 @@ export class AddRoomComponent implements OnInit{
       this.errorMessage = "Please select a room";
       return;
     }
-
-    // if(this.selectedSensors.length === 0){
-    //   this.errorMessage = "Please select at least one sensor";
-    //   return;
-    // }
 
     const sensorIds: string[] = this.selectedSensors
       .filter(sensor => sensor.id !== undefined && sensor.id !== null)
@@ -106,13 +105,18 @@ export class AddRoomComponent implements OnInit{
     };
 
     this.roomService.assign_room_to_user(payload).subscribe({
-      next: (data) => {
-        console.log("Room assigned successfully!", data);
+      next: () => {
         this.dialogRef.close(true);
+        this.snackBar.open('Room assigned successfully!', 'Close', {
+          duration: 3000,
+          panelClass: ['success-snackbar']
+        });
       },
-      error: (err) => {
-        console.warn("Failed to assign room: ", err);
-        this.errorMessage = err.error.message || "Failed to assign room.";
+      error: () => {
+        this.snackBar.open('Failed to assign room. Please try again.', 'Close', {
+          duration: 3000,
+          panelClass: ['error-snackbar']
+        });
       }
     })
   }
@@ -127,7 +131,7 @@ export class AddRoomComponent implements OnInit{
         this.availableRooms = data;
       },
       error: (err) => {
-        console.warn("Error while fetching the available rooms: " , err)
+        console.error("Error while fetching the available rooms: " , err)
       }
     })
   }

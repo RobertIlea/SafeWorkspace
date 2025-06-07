@@ -8,6 +8,7 @@ package org.example.springproject.controller;
 import org.example.springproject.dto.UserDTO;
 import org.example.springproject.entity.User;
 import org.example.springproject.exception.CreationException;
+import org.example.springproject.exception.EmptyResultException;
 import org.example.springproject.exception.ObjectNotFound;
 import org.example.springproject.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -124,22 +125,19 @@ public class UserController {
     /**
      * This method handles PUT requests to update a user's phone number by their ID.
      * @param id the ID of the user whose phone number is to be updated
-     * @param requestBody a map containing the new phone number
+     * @param phone the new phone number to be set for the user
      * @return ResponseEntity indicating success or failure
      * @throws ObjectNotFound if the user with the specified ID is not found or if the phone number is invalid
      */
     @PutMapping("{id}/phone")
-    public ResponseEntity<String> updateUserPhone(@PathVariable String id, @RequestBody Map<String, String> requestBody ) throws ObjectNotFound {
-        String phoneNumber = requestBody.get("phoneNumber");
+    public ResponseEntity<String> updateUserPhone(@PathVariable String id, @RequestParam String phone) throws ObjectNotFound {
+        userService.updateUserPhone(id,phone);
 
-        if(phoneNumber == null || phoneNumber.isEmpty()) {
-            throw new ObjectNotFound("Phone number cannot be null or empty");
+        if(phone == null || phone.isEmpty()) {
+            throw new ObjectNotFound("Invalid phone number provided for user with ID: " + id);
         }
 
-        userService.updateUserPhone(id,phoneNumber);
-
         return new ResponseEntity<>("Phone number updated!",HttpStatus.OK);
-
     }
 
     /**
@@ -158,5 +156,22 @@ public class UserController {
 
         return new ResponseEntity<>(userId, HttpStatus.OK);
 
+    }
+
+    /**
+     * This method handles GET requests to retrieve a user's phone number by their user ID.
+     * @param userId the ID of the user whose phone number is to be retrieved
+     * @return ResponseEntity containing the user's phone number
+     * @throws EmptyResultException if the user with the specified ID does not have a phone number
+     */
+    @GetMapping("/phone")
+    public ResponseEntity<String> getUserPhoneById(@RequestParam String userId) throws EmptyResultException {
+        String phone = userService.getUserPhoneNumber(userId);
+
+        if(phone == null || phone.isEmpty()) {
+            throw new EmptyResultException("User with id: " + userId + " doesn't have a phone number yet.");
+        }
+
+        return new ResponseEntity<>(phone, HttpStatus.OK);
     }
 }
