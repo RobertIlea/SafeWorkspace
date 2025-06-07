@@ -2,6 +2,10 @@
 
 <mat-dialog-content>
   <p>{{ data.message }}</p>
+
+  <p *ngIf="data.warning" class="warning-text">
+    {{ data.warning }}
+  </p>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">

@@ -8,3 +8,22 @@
   justify-content: center;
   gap: 6px;
 }
+
+.label{
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+.threshold-info {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #333;
+  margin-bottom: -10px;
+}
+
+.threshold-info .info-icon {
+  font-size: 14px;
+  color: #1976d2;
+  margin-right: 1px;
+}

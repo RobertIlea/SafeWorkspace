@@ -13,6 +13,7 @@ import {MatSnackBar} from '@angular/material/snack-bar';
 import {ConfirmDialogComponent} from '../confirm-dialog/confirm-dialog.component';
 import {combineLatest, interval, map, of, startWith, Subscription, switchMap} from 'rxjs';
 import {BaseChartDirective} from 'ng2-charts';
+import {AlertEventsService} from '../../services/alert-events.service';
 
 
 @Component({
@@ -47,6 +48,7 @@ export class DashboardComponent implements OnInit, OnDestroy{
     private sensorService: SensorService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
+    private alertEventsService: AlertEventsService,
   ){}
 
   ngOnInit(): void {
@@ -84,6 +86,7 @@ export class DashboardComponent implements OnInit, OnDestroy{
   trackByRoomId(index: number, room: Room): string {
     return <string>room.id;
   }
+
   compareRooms(r1: Room, r2: Room): boolean {
     return r1 && r2 ? r1.id === r2.id : r1 === r2;
   }
@@ -180,7 +183,6 @@ export class DashboardComponent implements OnInit, OnDestroy{
       if(newRoom){
         this.get_rooms();
         this.rooms.push(newRoom);
-        console.log("Updated rooms: ", this.rooms);
       }
     })
   }
@@ -199,14 +201,13 @@ export class DashboardComponent implements OnInit, OnDestroy{
         width: '300px',
         data: {
           title: 'Confirm Delete',
-          message: `Are you sure you want to remove "${room.name}"?`
+          message: `Are you sure you want to remove "${room.name}"`,
+          warning: 'This will permanently delete all past sensor data associated with this room.\nThis action cannot be undone.'
         }
       }).afterClosed().subscribe(result => {
         if (result === true) {
            if (room.id && room.userId) {
-               this.remove_room(room.id, room.userId);
-           } else {
-               console.error('Room ID or User ID is undefined.');
+             this.remove_room(room.id, room.userId);
            }
         }
       });
@@ -216,11 +217,11 @@ export class DashboardComponent implements OnInit, OnDestroy{
     this.roomService.remove_user_from_room(roomId,userId).subscribe({
       next: () => {
         this.rooms = this.rooms.filter(r => r.id !== roomId);
-        this.snackBar.open('Room removed successfully.', 'Close', { duration: 3000 });
+        this.alertEventsService.customAlertCreated$.next();
+        this.snackBar.open('Room removed successfully.', 'Close', { duration: 3000, panelClass: 'success-snackbar' });
       },
-      error: (err) => {
-        console.error('Failed to remove room:', err);
-        this.snackBar.open('Failed to remove room.', 'Close', { duration: 3000 });
+      error: () => {
+        this.snackBar.open('Failed to remove room.', 'Close', { duration: 3000, panelClass: 'error-snackbar' });
       }
     })
   }
@@ -351,7 +352,7 @@ export class DashboardComponent implements OnInit, OnDestroy{
     };
  }
 
- format_time(detail: Details){
+  format_time(detail: Details){
   let date: Date | null = null;
 
     if (typeof detail.get_timestamp_date === 'function') {
@@ -363,11 +364,11 @@ export class DashboardComponent implements OnInit, OnDestroy{
     return date ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
  }
 
- capitalize_first_letter(str: string){
+  capitalize_first_letter(str: string){
   return str.charAt(0).toUpperCase() + str.slice(1);
  }
 
- reset_chart(){
+  reset_chart(){
   this.hasDataForChart = false;
   this.chartData = { labels: [], datasets: [] };
  }

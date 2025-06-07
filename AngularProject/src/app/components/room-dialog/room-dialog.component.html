@@ -4,38 +4,92 @@
   <div *ngFor="let sensor of room?.sensors">
     <mat-card class="sensor-card">
       <mat-card-header>
-        <mat-card-title>{{ sensor.sensorType }}</mat-card-title>
+        <mat-card-title>
+          {{ sensor.sensorType }}
+          <span *ngIf="!sensor.active" style="font-size: 0.9rem; color: #888; margin-left: 8px;">(inactive)</span>
+        </mat-card-title>
       </mat-card-header>
-      <button mat-stroked-button class="set-limit-btn" color="primary" (click)="openCustomAlertDialog(sensor)">
+
+      <button
+        mat-stroked-button
+        class="set-limit-btn"
+        color="primary"
+        (click)="openCustomAlertDialog(sensor)"
+        [disabled]="!sensor.active"
+      >
         <mat-icon fontIcon="tune" style="margin-right: 4px;"></mat-icon>
         Set limits
       </button>
+
+      <button
+        mat-stroked-button
+        class="set-limit-btn"
+        color="primary"
+        (click)="toggleSensorStatus(sensor)"
+      >
+        <mat-icon fontIcon="tune" style="margin-right: 4px;"></mat-icon>
+        {{ sensor.active ? 'Deactivate' : 'Activate' }}
+      </button>
+
       <mat-card-content>
-        <div *ngIf="getLastDetail(sensor) as detail">
+        <ng-container *ngIf="sensor.active; else inactiveSensor">
+          <div *ngIf="getLastDetail(sensor) as detail; else noData">
+            <p class="timestamp">
+              {{detail.timestamp!.seconds ? (detail.timestamp!.seconds * 1000 | date : 'medium') : '' }}
+            </p>
 
-          <p class="timestamp">{{ detail.timestamp!.seconds ? (detail.timestamp!.seconds * 1000 | date:'medium') : '' }}</p>
-
-          <div class="sensor-data-container">
-            <div *ngFor="let data of (detail.data | keyvalue)">
-              <div *ngIf="data.key === 'temperature'" [ngClass]="getCircleClass(data.key, data.value)" class="sensor-circle">
-                <small>Temperature</small>
-                <span>{{ data.value | number:'1.2-2' }}°C</span>
+            <div class="sensor-data-container">
+              <div *ngFor="let data of detail.data | keyvalue">
+                <div
+                  *ngIf="data.key === 'temperature'"
+                  [ngClass]="getCircleClass(data.key, data.value)"
+                  class="sensor-circle"
+                >
+                  <small>Temperature</small>
+                  <span>{{ data.value | number : '1.2-2' }}°C</span>
+                </div>
+                <div
+                  *ngIf="data.key === 'humidity'"
+                  [ngClass]="getCircleClass(data.key, data.value)"
+                  class="sensor-circle"
+                >
+                  <small>Humidity</small>
+                  <span>{{ data.value | number : '1.2-2' }}%</span>
+                </div>
+                <div
+                  *ngIf="data.key === 'gas'"
+                  [ngClass]="getCircleClass(data.key, data.value)"
+                  class="sensor-circle"
+                >
+                  <span>{{ data.value }}</span>
+                </div>
+                <p *ngIf="data.key === 'gas'">{{ getGasLevelMessage(data.value) }}</p>
+                <div
+                  *ngIf="data.key === 'mq2Value'"
+                  [ngClass]="getCircleClass(data.key, data.value)"
+                  class="sensor-circle"
+                >
+                  <span>{{ data.value }}</span>
+                </div>
+                <p *ngIf="data.key === 'mq2Value'">{{ getMq2LevelMessage(data.value) }}</p>
               </div>
-              <div *ngIf="data.key === 'humidity'" [ngClass]="getCircleClass(data.key, data.value)" class="sensor-circle">
-                <small>Humidity</small>
-                <span>{{ data.value  | number:'1.2-2' }}%</span>
-              </div>
-              <div *ngIf="data.key === 'gas'" [ngClass]="getCircleClass(data.key, data.value)" class="sensor-circle">
-                <span>{{ data.value }}</span>
-              </div>
-              <p *ngIf="data.key === 'gas'">{{ getGasLevelMessage(data.value) }}</p>
-              <div *ngIf="data.key === 'mq2Value'" [ngClass]="getCircleClass(data.key, data.value)" class="sensor-circle">
-                <span>{{ data.value }}</span>
-              </div>
-              <p *ngIf="data.key === 'mq2Value'">{{ getMq2LevelMessage(data.value) }}</p>
             </div>
           </div>
-        </div>
+        </ng-container>
+
+        <ng-template #noData>
+          <div class="no-sensor-data">
+            <mat-icon>info</mat-icon>
+            <span>No sensor data available yet.</span>
+          </div>
+        </ng-template>
+
+        <ng-template #inactiveSensor>
+          <div class="no-sensor-data">
+            <mat-icon>info</mat-icon>
+            <span>This sensor is currently inactive and not collecting data.</span>
+          </div>
+        </ng-template>
       </mat-card-content>
     </mat-card>
   </div>

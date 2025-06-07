@@ -3,53 +3,56 @@
   <mat-form-field appearance="outline">
     <mat-label>Filter by room</mat-label>
     <mat-select [(ngModel)]="selectedRoomId" (selectionChange)="applyFilters()">
+      <mat-option value="">All Rooms</mat-option>
       <mat-option *ngFor="let room of uniqueRooms" [value]="room.id">{{room.name}}</mat-option>
     </mat-select>
   </mat-form-field>
-
-  <table mat-table [dataSource]="filteredAlerts" class="mat-elevation-z2">
-    <ng-container matColumnDef="parameter">
-      <th mat-header-cell *matHeaderCellDef>Param</th>
-      <td mat-cell *matCellDef="let alert">{{ alert.parameter }}</td>
-    </ng-container>
-    <ng-container matColumnDef="condition">
-      <th mat-header-cell *matHeaderCellDef>Cond</th>
-      <td mat-cell *matCellDef="let alert">{{ alert.condition }} {{ alert.threshold }}</td>
-    </ng-container>
-    <ng-container matColumnDef="message">
-      <th mat-header-cell *matHeaderCellDef>Message</th>
-      <td mat-cell *matCellDef="let alert">
+  <div class="table-scroll-container">
+    <table mat-table [dataSource]="filteredAlerts" class="mat-elevation-z2">
+      <ng-container matColumnDef="parameter">
+        <th mat-header-cell *matHeaderCellDef>Param</th>
+        <td mat-cell *matCellDef="let alert">{{ alert.parameter }}</td>
+      </ng-container>
+      <ng-container matColumnDef="condition">
+        <th mat-header-cell *matHeaderCellDef>Cond</th>
+        <td mat-cell *matCellDef="let alert">{{ alert.condition }} {{ alert.threshold }}</td>
+      </ng-container>
+      <ng-container matColumnDef="message">
+        <th mat-header-cell *matHeaderCellDef>Message</th>
+        <td mat-cell *matCellDef="let alert">
         <span
           class="message-text"
           [class.collapsed]="!isExpanded(alert.id)"
           (click)="toggleExpand(alert.id)">
           {{ isExpanded(alert.id) ? alert.message : (alert.message | slice:0:50) + '...' }}
         </span>
-      </td>
-    </ng-container>
-    <ng-container matColumnDef="roomId">
-      <th mat-header-cell *matHeaderCellDef>Room</th>
-      <td mat-cell *matCellDef="let alert">{{ getRoomName(alert.roomId) }}</td>
-    </ng-container>
-    <ng-container matColumnDef="sensorId">
-      <th mat-header-cell *matHeaderCellDef>Sensor</th>
-      <td mat-cell *matCellDef="let alert">{{ getSensorType(alert.sensorId) }}</td>
-    </ng-container>
-    <ng-container matColumnDef="actions">
-      <th mat-header-cell *matHeaderCellDef>Actions</th>
-      <td mat-cell *matCellDef="let alert">
-        <button mat-icon-button color="primary" (click)="editAlert(alert)">
-          <mat-icon>edit</mat-icon>
-        </button>
-        <button mat-icon-button color="warn" (click)="deleteAlert(alert)">
-          <mat-icon>delete</mat-icon>
-        </button>
-      </td>
-    </ng-container>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="roomId">
+        <th mat-header-cell *matHeaderCellDef>Room</th>
+        <td mat-cell *matCellDef="let alert">{{ getRoomName(alert.roomId) }}</td>
+      </ng-container>
+      <ng-container matColumnDef="sensorId">
+        <th mat-header-cell *matHeaderCellDef>Sensor</th>
+        <td mat-cell *matCellDef="let alert">{{ getSensorType(alert.sensorId) }}</td>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let alert">
+          <button mat-icon-button color="primary" (click)="editAlert(alert)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="deleteAlert(alert)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
 
-    <tr mat-header-row *matHeaderRowDef="['parameter','condition','message','roomId','sensorId','actions']"></tr>
-    <tr mat-row *matRowDef="let row; columns: ['parameter','condition','message','roomId','sensorId','actions'];"></tr>
-  </table>
+      <tr mat-header-row *matHeaderRowDef="['parameter','condition','message','roomId','sensorId','actions']"></tr>
+      <tr mat-row *matRowDef="let row; columns: ['parameter','condition','message','roomId','sensorId','actions'];"></tr>
+    </table>
+  </div>
+
 </ng-container>
 
 <ng-template #noAlerts>

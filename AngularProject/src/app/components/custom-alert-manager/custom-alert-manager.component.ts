@@ -5,6 +5,9 @@ import {EditCustomAlertDialogComponent} from '../edit-custom-alert-dialog/edit-c
 import {MatDialog} from '@angular/material/dialog';
 import {RoomService} from '../../services/room.service';
 import {Room} from '../../models/room-model';
+import {AlertEventsService} from '../../services/alert-events.service';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {ConfirmDialogComponent} from '../confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-custom-alert-manager',
@@ -22,9 +25,19 @@ export class CustomAlertManagerComponent implements OnInit {
   sensorTypesMap: { [sensorId: string]: string } = {};
   expandedText: { [id: string]: boolean } = {};
 
-  constructor(private customAlertService: CustomAlertService, private dialog: MatDialog, private roomService: RoomService) { }
+  constructor(
+    private customAlertService: CustomAlertService,
+    private alertEventsService: AlertEventsService,
+    private dialog: MatDialog,
+    private roomService: RoomService,
+    private snackBar: MatSnackBar,
+  ){ }
 
   ngOnInit(): void {
+    this.alertEventsService.customAlertCreated$.subscribe(() => {
+      this.fetchAlerts();
+    })
+
     this.roomService.rooms$.subscribe(rooms => {
       this.buildRoomAndSensorMaps(rooms);
       this.fetchAlerts();
@@ -72,14 +85,13 @@ export class CustomAlertManagerComponent implements OnInit {
         if(err.status === 404) {
           this.customAlerts = this.customAlerts.filter(alert => alert.roomId !== this.selectedRoomId);
         }
-        console.error('Failed to load custom alerts:', err);
       }
     });
   }
 
   editAlert(alert: CustomAlert) {
     const dialogRef = this.dialog.open(EditCustomAlertDialogComponent, {
-      width: '500px',
+      width: '400px',
       data: alert
     });
 
@@ -91,11 +103,26 @@ export class CustomAlertManagerComponent implements OnInit {
   }
 
   deleteAlert(alert: CustomAlert) {
-    if (confirm('Are you sure you want to delete this alert?')) {
-      this.customAlertService.delete_custom_alert(alert.id!).subscribe({
-        next: () => this.fetchAlerts(),
-        error: (err) => console.error('Failed to delete alert:', err)
-      });
+    if (alert.roomId != null) {
+      this.dialog.open(ConfirmDialogComponent, {
+        width: '400px',
+        data: {
+          title: 'Delete Custom Alert',
+          message: `Are you sure you want to delete the custom alert for ${this.getRoomName(alert.roomId)}?`
+        }
+      }).afterClosed().subscribe(confirmed => {
+        if (confirmed) {
+          this.customAlertService.delete_custom_alert(alert.id!).subscribe({
+            next: () => {
+              this.snackBar.open('Custom alert deleted successfully', 'Close', {duration: 3000, panelClass: ['snackbar-success']});
+              this.fetchAlerts();
+            },
+            error: () => {
+              this.snackBar.open('Failed to delete custom alert', 'Close', {duration: 3000, panelClass: ['snackbar-error']});
+            }
+          });
+        }
+      })
     }
   }
 

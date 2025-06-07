@@ -19,9 +19,22 @@
     </mat-select>
   </mat-form-field>
 
+  <p class="threshold-info">
+    <mat-icon class="info-icon" fontIcon="info"></mat-icon>
+    System will automatically trigger an alert when the sensor value goes above or below system threshold.
+  </p>
+
   <mat-form-field appearance="outline" class="custom-field">
     <mat-label>Threshold</mat-label>
-    <input matInput type="number" formControlName="threshold" />
+    <input matInput type="number" formControlName="threshold" [min]="currentMin" [max]="currentMax" step="0.1"/>
+    <ng-container *ngIf="form.get('threshold') as thresholdControl">
+      <mat-error *ngIf="thresholdControl.hasError('min')">
+        Value must be at least {{ currentMin }}
+      </mat-error>
+      <mat-error *ngIf="thresholdControl.hasError('max')">
+        Value must be at most {{ currentMax }}
+      </mat-error>
+    </ng-container>
   </mat-form-field>
 
   <mat-form-field appearance="outline" class="custom-field">
