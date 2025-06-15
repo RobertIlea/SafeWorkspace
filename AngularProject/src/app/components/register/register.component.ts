@@ -36,8 +36,7 @@ export class RegisterComponent implements OnInit {
   onRegister(): void{
     if (this.registerForm.invalid) {
       this.snackBar.open("Please fix the errors in the form.", "Close", {
-        duration: 3000,
-        panelClass: ['error-snackbar']
+        duration: 3000
       });
       return;
     }
@@ -51,14 +50,12 @@ export class RegisterComponent implements OnInit {
         sessionStorage.setItem('user', JSON.stringify({ user_data: this.user }));
         this.router.navigate(['/home']);
         this.snackBar.open("Registration successful!", "Close", {
-          duration: 3000,
-          panelClass: ['success-snackbar']
+          duration: 3000
         });
       },
       error: () => {
         this.snackBar.open("Registration failed. Please try again.", "Close", {
-          duration: 3000,
-          panelClass: ['error-snackbar']
+          duration: 3000
         });
       }
     });

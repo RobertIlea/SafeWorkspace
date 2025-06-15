@@ -113,21 +113,18 @@ export class CustomAlertDialogComponent implements OnInit {
           this.alertEventsService.customAlertCreated$.next();
           this.snackBar.open('Custom alert created successfully!', 'Close', {
             duration: 3000,
-            panelClass: ['success-snackbar']
           });
           this.dialogRef.close(true);
         },
         error: () => {
           this.snackBar.open('Failed to create custom alert. Please try again.', 'Close', {
             duration: 3000,
-            panelClass: ['error-snackbar']
           });
         }
       });
     } else {
       this.snackBar.open('Form is invalid. Please check your inputs.', 'Close', {
         duration: 3000,
-        panelClass: ['error-snackbar']
       });
     }
   }

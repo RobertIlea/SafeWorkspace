@@ -218,10 +218,10 @@ export class DashboardComponent implements OnInit, OnDestroy{
       next: () => {
         this.rooms = this.rooms.filter(r => r.id !== roomId);
         this.alertEventsService.customAlertCreated$.next();
-        this.snackBar.open('Room removed successfully.', 'Close', { duration: 3000, panelClass: 'success-snackbar' });
+        this.snackBar.open('Room removed successfully.', 'Close', { duration: 3000 });
       },
       error: () => {
-        this.snackBar.open('Failed to remove room.', 'Close', { duration: 3000, panelClass: 'error-snackbar' });
+        this.snackBar.open('Failed to remove room.', 'Close', { duration: 3000 });
       }
     })
   }
@@ -314,6 +314,7 @@ export class DashboardComponent implements OnInit, OnDestroy{
     }
  }
 
+  // Fetching sensor data by date
   fetchSensorDataByDate(selectedId: string, selectedDay: string) {
     this.chartSub = this.sensorService.get_sensor_data_by_date(selectedId, selectedDay).subscribe({
       next: (details: Details[]) => {
@@ -326,6 +327,7 @@ export class DashboardComponent implements OnInit, OnDestroy{
     });
   }
 
+  // Process the chart data
   process_chart_data(details: Details[]){
   const validDetails = details
         .filter(d => d.timestamp && d.data)
@@ -352,6 +354,7 @@ export class DashboardComponent implements OnInit, OnDestroy{
     };
  }
 
+  // Method to format the time
   format_time(detail: Details){
   let date: Date | null = null;
 

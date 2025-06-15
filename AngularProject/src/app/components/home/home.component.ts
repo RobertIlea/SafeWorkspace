@@ -20,11 +20,7 @@ export class HomeComponent {
   isDarkMode = false;
   isSidebarVisible = true;
   isMobileView = false;
-  userData: any = null;
   constructor(private route: ActivatedRoute, private router: Router) {}
-  ngOnInit(): void {
-    this.checkWindowSize();
-  }
 
   @HostListener('window:resize')
   onResize(){
@@ -33,7 +29,7 @@ export class HomeComponent {
 
   checkWindowSize(){
     this.isMobileView = window.innerWidth <= 768;
-    
+
     if(this.isMobileView){
       this.isSidebarVisible = false;
     }else{
@@ -41,11 +37,4 @@ export class HomeComponent {
     }
   }
 
-  toggleSidebar(){
-    this.isSidebarVisible = !this.isSidebarVisible;
-  }
-
-  toggleDarkMode(){
-    this.isDarkMode = !this.isDarkMode;
-  }
 }

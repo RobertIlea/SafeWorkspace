@@ -67,13 +67,11 @@ export class EditCustomAlertDialogComponent implements OnInit {
       complete: () => {
         this.snackBar.open('Alert updated successfully!', 'Close', {
           duration: 3000,
-          panelClass: ['success-snackbar']
         });
       },
       error: () => {
         this.snackBar.open('Failed to update alert. Please try again.', 'Close', {
           duration: 3000,
-          panelClass: ['error-snackbar']
         });
       }
     });

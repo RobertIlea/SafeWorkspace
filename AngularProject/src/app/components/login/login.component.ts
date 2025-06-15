@@ -6,7 +6,7 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-login',
   standalone: false,
-  
+
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
@@ -18,9 +18,6 @@ export class LoginComponent {
   constructor(private loginService: LoginService, private router: Router){}
 
   onLogin():void{
-    console.log("Trying to login..");
-    console.log("Email: ", this.email);
-    
     this.loginService.postUser(this.email,this.password).subscribe({
       next: (res) => {
         const token = res.token;
@@ -41,7 +38,7 @@ export class LoginComponent {
       }
     })
   }
-  
+
   loginWithGoogle():void{
     window.location.href = 'http://localhost:8080/oauth2/authorization/google';
   }
