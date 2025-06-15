@@ -147,9 +147,9 @@ public class MqttConfig {
     public MqttPahoMessageDrivenChannelAdapter inbound() {
         MqttPahoMessageDrivenChannelAdapter adapter =
                 new MqttPahoMessageDrivenChannelAdapter(brokerUrl, "testClient", topicDht22, topicMq5,topicEsp32x1,topicEsp32x2);
-        adapter.setCompletionTimeout(8000);
+        adapter.setCompletionTimeout(5000);
         adapter.setConverter(new DefaultPahoMessageConverter());
-        adapter.setQos(0);
+        adapter.setQos(1);
         adapter.setOutputChannel(mqttInputChannel());
         return adapter;
     }
@@ -174,55 +174,31 @@ public class MqttConfig {
             if (data.containsKey("temperature")) {
                 float temperature = data.get("temperature");
                 if (temperature > 50) {
-                    System.out.println("@@@@@@@@@@@@@ ALERT @@@@@@@@@@@@@");
-                    System.out.println("Temperature is too high: " + temperature + "°C");
-
                     Alert alert = new Alert(roomId,sensorDTO.getId(),details.getTimestamp(),sensorDTO.getSensorType(),data,"Temperature in room: " + roomDTO.getName() + " is too high " + temperature + " °C");
                     alertService.saveAlert(alert);
                     alertManager.sendEmail(userFromDTO,alert,sensorFromDTO);
                     notifyUser(userDTO, alert, sensorFromDTO);
-
-                    System.out.println("Alert saved");
-                    System.out.println("@@@@@@@@@@@@@ END OF THE ALERT @@@@@@@@@@@@@");
                 }
                 if (temperature < -15) {
-                    System.out.println("@@@@@@@@@@@@@ ALERT @@@@@@@@@@@@@");
-                    System.out.println("Temperature is too low: " + temperature + "°C");
-
                     Alert alert = new Alert(roomId,sensorDTO.getId(),details.getTimestamp(),sensorDTO.getSensorType(),data,"Temperature in room: " + roomDTO.getName() + " is too low: " + temperature + " °C");
                     alertService.saveAlert(alert);
                     alertManager.sendEmail(userFromDTO,alert,sensorFromDTO);
                     notifyUser(userDTO, alert, sensorFromDTO);
-
-                    System.out.println("Alert saved");
-                    System.out.println("@@@@@@@@@@@@@ END OF THE ALERT @@@@@@@@@@@@@");
                 }
             }
             if (data.containsKey("humidity")) {
                 float humidity = data.get("humidity");
                 if (humidity > 95) {
-                    System.out.println("@@@@@@@@@@@@@ ALERT @@@@@@@@@@@@@");
-                    System.out.println("Humidity is too high: " + humidity + "%");
-
                     Alert alert = new Alert(roomId,sensorDTO.getId(),details.getTimestamp(),sensorDTO.getSensorType(),data,"Humidity in room: "+ roomDTO.getName() + " is too high: " + humidity + " %");
                     alertService.saveAlert(alert);
                     alertManager.sendEmail(userFromDTO,alert,sensorFromDTO);
                     notifyUser(userDTO, alert, sensorFromDTO);
-
-                    System.out.println("Alert saved");
-                    System.out.println("@@@@@@@@@@@@@ END OF THE ALERT @@@@@@@@@@@@@");
                 }
                 if (humidity < 10) {
-                    System.out.println("@@@@@@@@@@@@@ ALERT @@@@@@@@@@@@@");
-                    System.out.println("Humidity is too low: " + humidity + "%");
-
                     Alert alert = new Alert(roomId,sensorDTO.getId(),details.getTimestamp(),sensorDTO.getSensorType(),data,"Humidity in room: " + roomDTO.getName() + " is too low: " + humidity + " %");
                     alertService.saveAlert(alert);
                     alertManager.sendEmail(userFromDTO,alert,sensorFromDTO);
                     notifyUser(userDTO, alert, sensorFromDTO);
-
-                    System.out.println("Alert saved");
-                    System.out.println("@@@@@@@@@@@@@ END OF THE ALERT @@@@@@@@@@@@@");
                 }
             }
         }
@@ -249,16 +225,10 @@ public class MqttConfig {
                 float gasLevel = data.get("gas");
 
                 if (gasLevel > 700) {
-                    System.out.println("@@@@@@@@@@@@@ ALERT @@@@@@@@@@@@@");
-                    System.out.println("Gas level is too high: " + gasLevel);
-
                     Alert alert = new Alert(roomId,sensorDTO.getId(),details.getTimestamp(),sensorDTO.getSensorType(),data,"Gas level in room: " + roomDTO.getName() + " is too high: " + gasLevel);
                     alertService.saveAlert(alert);
                     alertManager.sendEmail(userFromDTO,alert,sensorFromDTO);
                     notifyUser(userDTO, alert, sensorFromDTO);
-
-                    System.out.println("Alert saved");
-                    System.out.println("@@@@@@@@@@@@@ END OF THE ALERT @@@@@@@@@@@@@");
                 }
             }
         }
@@ -284,16 +254,10 @@ public class MqttConfig {
                 float gasLevel = data.get("gas");
 
                 if(gasLevel > 800){
-                    System.out.println("@@@@@@@@@@@@@ ALERT @@@@@@@@@@@@@");
-                    System.out.println("Gas level is too high: " + gasLevel);
-
                     Alert alert = new Alert(roomId,sensorDTO.getId(),details.getTimestamp(),sensorDTO.getSensorType(),data,"Smoke or gas level in room: "+ roomDTO.getName() + " is too high: " + gasLevel);
                     alertService.saveAlert(alert);
                     alertManager.sendEmail(userFromDTO,alert,sensorFromDTO);
                     notifyUser(userDTO, alert, sensorFromDTO);
-
-                    System.out.println("Alert saved");
-                    System.out.println("@@@@@@@@@@@@@ END OF THE ALERT @@@@@@@@@@@@@");
                 }
 
             }
@@ -312,8 +276,14 @@ public class MqttConfig {
             // Get user's phone number
             String userPhoneNumber = userService.getUserPhoneNumber(userDTO.getId());
 
+            // Skip if no phone number exists
+            if (userPhoneNumber == null || userPhoneNumber.trim().isEmpty()) {
+                return;
+            }
+
             // Message the user
-            String message = "Hello, " + userDTO.getName() + "\n" + "The sensor type is: " + sensor.getSensorType() + "\n" + alert.getMessage();
+            RoomDTO roomDTO = roomService.getRoomById(alert.getRoomId());
+            String message = "Hello, " + userDTO.getName() + "\n\n" + "The sensor type is: " + sensor.getSensorType() + "\n\n"+ "The room is called: "+ roomDTO.getName()+"\n\n" + "Alert: " + alert.getMessage();
             twilioService.sendSms(userPhoneNumber,message);
 
             // Call the user
@@ -344,16 +314,10 @@ public class MqttConfig {
                 Float value = data.get(customAlert.getParameter());
                 if (value != null) {
                     if (evaluateCondition(value, customAlert.getCondition(), customAlert.getThreshold())) {
-                        System.out.println("@@@@@@@@@@@@@ ALERT @@@@@@@@@@@@@");
-                        System.out.println("Custom alert triggered: " + customAlert.getMessage());
-
                         Alert alert = new Alert(roomId,sensorDTO.getId(),detail.getTimestamp(),sensorDTO.getSensorType(),data,customAlert.getMessage());
                         alertService.saveAlert(alert);
                         alertManager.sendEmail(userFromDTO,alert,sensorFromDTO);
                         notifyUser(userDTO, alert, sensorFromDTO);
-
-                        System.out.println("Custom alert saved");
-                        System.out.println("@@@@@@@@@@@@@ END OF THE ALERT @@@@@@@@@@@@@");
                     }
                 }
             }
