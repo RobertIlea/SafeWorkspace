@@ -1,22 +1,2 @@
 
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; background-color: white; }
-
-.success-snackbar {
-  background: linear-gradient(to right, #43cea2, #185a9d);
-  color: white;
-  font-weight: 600;
-  padding: 16px;
-  font-size: 15px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
-
-.error-snackbar {
-  background: linear-gradient(to right, #f85032, #e73827);
-  color: white;
-  font-weight: 600;
-  padding: 16px;
-  font-size: 15px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}

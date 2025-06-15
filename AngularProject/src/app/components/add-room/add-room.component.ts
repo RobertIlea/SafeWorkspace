@@ -108,14 +108,12 @@ export class AddRoomComponent implements OnInit{
       next: () => {
         this.dialogRef.close(true);
         this.snackBar.open('Room assigned successfully!', 'Close', {
-          duration: 3000,
-          panelClass: ['success-snackbar']
+          duration: 3000
         });
       },
       error: () => {
         this.snackBar.open('Failed to assign room. Please try again.', 'Close', {
-          duration: 3000,
-          panelClass: ['error-snackbar']
+          duration: 3000
         });
       }
     })

@@ -114,11 +114,11 @@ export class CustomAlertManagerComponent implements OnInit {
         if (confirmed) {
           this.customAlertService.delete_custom_alert(alert.id!).subscribe({
             next: () => {
-              this.snackBar.open('Custom alert deleted successfully', 'Close', {duration: 3000, panelClass: ['snackbar-success']});
+              this.snackBar.open('Custom alert deleted successfully', 'Close', {duration: 3000});
               this.fetchAlerts();
             },
             error: () => {
-              this.snackBar.open('Failed to delete custom alert', 'Close', {duration: 3000, panelClass: ['snackbar-error']});
+              this.snackBar.open('Failed to delete custom alert', 'Close', {duration: 3000});
             }
           });
         }

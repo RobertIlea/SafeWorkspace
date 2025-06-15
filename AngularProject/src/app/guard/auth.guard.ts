@@ -17,9 +17,11 @@ export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: R
   }
 
   try {
+    // Decode the jt token
     const decoded = jwtDecode<JwtPayload>(token);
     const isExpired = decoded.exp <Date.now() / 1000;
 
+    // If the token is expired, we remove it from localStorage
     if(isExpired){
       localStorage.removeItem('jwtToken');
       router.navigate(['/login']);
